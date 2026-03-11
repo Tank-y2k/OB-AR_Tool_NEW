@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rationale Tool v2</title>
+  <title>Rationale Builder</title>
   <!-- <link rel="stylesheet" href="styles.css" /> -->
   <style>
   :root {
@@ -107,7 +107,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   outline-offset: 2px;
 }
 
-.pill-grid, .macro-grid {
+.pill-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
@@ -126,19 +126,33 @@ input:focus, select:focus, textarea:focus, button:focus {
 }
 .pill input { width: auto; }
 
-.macro {
-  text-align: left;
-  min-height: 84px;
-  padding: 14px;
-  border-radius: 14px;
+.hidden { display: none; }
+
+.settings-inline {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.risk-factor-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
-  background: #121722;
+  border-radius: 12px;
+  background: #10141c;
+}
+
+.risk-factor-item button {
+  border: 1px solid rgba(255, 125, 125, 0.35);
+  background: rgba(255, 125, 125, 0.14);
   color: var(--text);
+  border-radius: 10px;
+  padding: 6px 10px;
   cursor: pointer;
 }
-.macro small { display: block; color: var(--muted); margin-top: 6px; }
-.macro.editing { border-color: var(--success); }
-.hidden { display: none; }
 
 .settings-list { display: grid; gap: 14px; }
 .switch-row {
@@ -185,14 +199,12 @@ input:focus, select:focus, textarea:focus, button:focus {
   <div class="app-shell">
     <aside class="sidebar">
       <div>
-        <h1>Rationale Tool <span>v2</span></h1>
-        <p class="subtitle">Structured notes builder with modular sections and reusable macros.</p>
+        <h1>Rationale <span>Builder</span></h1>
+        <p class="subtitle">Structured notes builder focused on rationale output.</p>
       </div>
 
       <nav class="tab-list" aria-label="Main sections">
         <button class="tab active" data-tab="rationale">Rationale</button>
-        <button class="tab" data-tab="idv">IDV</button>
-        <button class="tab" data-tab="macros">Macros</button>
         <button class="tab" data-tab="settings">Settings</button>
       </nav>
 
@@ -211,11 +223,6 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="grid two">
-          <label>
-            <span>Case Type</span>
-            <input type="text" id="caseType" placeholder="e.g. Onboarding review" />
-          </label>
-
           <label>
             <span>Decision</span>
             <select id="decision">
@@ -236,14 +243,6 @@ input:focus, select:focus, textarea:focus, button:focus {
             </select>
           </label>
 
-          <label>
-            <span>Confidence</span>
-            <select id="confidence">
-              <option value="High">High</option>
-              <option value="Moderate">Moderate</option>
-              <option value="Low">Low</option>
-            </select>
-          </label>
         </div>
 
         <label>
@@ -280,79 +279,10 @@ input:focus, select:focus, textarea:focus, button:focus {
         </label>
       </section>
 
-      <section class="panel" id="panel-idv">
-        <div class="panel-header">
-          <h2>IDV</h2>
-          <p>Document identity and verification checks in a consistent format.</p>
-        </div>
-
-        <div class="grid two">
-          <label>
-            <span>Applicant Name</span>
-            <input type="text" id="applicantName" placeholder="Full name" />
-          </label>
-          <label>
-            <span>Date of Birth</span>
-            <input type="text" id="dob" placeholder="DD/MM/YYYY" />
-          </label>
-          <label>
-            <span>ID Type</span>
-            <input type="text" id="idType" placeholder="Passport, Driving Licence..." />
-          </label>
-          <label>
-            <span>ID Country</span>
-            <input type="text" id="idCountry" placeholder="Issuing country" />
-          </label>
-        </div>
-
-        <div class="grid two">
-          <label>
-            <span>Document Number</span>
-            <input type="text" id="documentNumber" placeholder="Optional" />
-          </label>
-          <label>
-            <span>Expiry Date</span>
-            <input type="text" id="expiryDate" placeholder="DD/MM/YYYY" />
-          </label>
-        </div>
-
-        <div>
-          <span class="label-title">Verification Checks</span>
-          <div class="pill-grid" id="verificationChecks">
-            <label class="pill"><input type="checkbox" value="Name matches application" /> Name matches</label>
-            <label class="pill"><input type="checkbox" value="DOB matches application" /> DOB matches</label>
-            <label class="pill"><input type="checkbox" value="Address verified" /> Address verified</label>
-            <label class="pill"><input type="checkbox" value="Document in date" /> In date</label>
-            <label class="pill"><input type="checkbox" value="Photo likeness acceptable" /> Photo likeness</label>
-            <label class="pill"><input type="checkbox" value="Document appears genuine" /> Appears genuine</label>
-            <label class="pill"><input type="checkbox" value="Electronic verification passed" /> Electronic verification passed</label>
-            <label class="pill"><input type="checkbox" value="Manual review completed" /> Manual review completed</label>
-          </div>
-        </div>
-
-        <label>
-          <span>IDV Notes</span>
-          <textarea id="idvNotes" rows="5" placeholder="Any exceptions, discrepancies, or explanation of how IDV was satisfied."></textarea>
-        </label>
-      </section>
-
-      <section class="panel" id="panel-macros">
-        <div class="panel-header split">
-          <div>
-            <h2>Quick Macros</h2>
-            <p>Tap to insert stock wording into the active text box.</p>
-          </div>
-          <button id="macroEditToggle">Edit Macro Labels</button>
-        </div>
-
-        <div id="macroEditorHint" class="hint hidden">Macro edit mode is on. Click a label to rename it.</div>
-        <div class="macro-grid" id="macroGrid"></div>
-      </section>
-
       <section class="panel" id="panel-settings">
         <div class="panel-header">
           <h2>Settings</h2>
-          <p>Control layout behaviour and saved preferences.</p>
+          <p>Control layout behaviour and manage risk factors.</p>
         </div>
 
         <div class="settings-list">
@@ -379,6 +309,18 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
             <input type="checkbox" id="autoGenerate" checked />
           </label>
+
+          <div class="switch-row" style="display:block;">
+            <div style="margin-bottom:12px;">
+              <strong>Risk factor buttons</strong>
+              <p>Add and remove the selectable risk factors shown in the rationale section.</p>
+            </div>
+            <div class="settings-inline">
+              <input type="text" id="newRiskFactor" placeholder="Add new risk factor" />
+              <button type="button" id="addRiskFactorBtn">Add</button>
+            </div>
+            <div id="riskFactorManager" class="settings-list" style="margin-top:12px;"></div>
+          </div>
         </div>
       </section>
     </main>
@@ -389,40 +331,22 @@ input:focus, select:focus, textarea:focus, button:focus {
         <p>Ready to copy into your workflow.</p>
       </div>
       <textarea id="output" rows="28" placeholder="Generated output will appear here."></textarea>
-      <div class="footer-note">Preferences and macro names are saved locally in your browser.</div>
+      <div class="footer-note">Preferences and risk factors are saved locally in your browser.</div>
     </aside>
   </div>
 
   <!-- <script src="app.js"></script> -->
   <script>
   const STORAGE_KEY = 'rationale-tool-v2-state';
-const MACRO_KEY = 'rationale-tool-v2-macros';
 
-const defaultMacros = [
-  {
-    label: 'No material concerns',
-    text: 'No material concerns identified following review of the information and documentation provided.'
-  },
-  {
-    label: 'Escalated for review',
-    text: 'Case escalated for further review due to the nature of the indicators identified and the need for additional oversight.'
-  },
-  {
-    label: 'IDV satisfied',
-    text: 'IDV requirements considered satisfied on the balance of the documentation and verification checks completed.'
-  },
-  {
-    label: 'More info needed',
-    text: 'Further information is required before a final decision can be made with sufficient confidence.'
-  },
-  {
-    label: 'Source explanation reasonable',
-    text: 'The explanation provided appears plausible and consistent with the information available at the time of review.'
-  },
-  {
-    label: 'Document acceptable',
-    text: 'Document quality and content appear acceptable for the purpose of this review, with no obvious signs of tampering.'
-  }
+const defaultRiskFactors = [
+  'Adverse media',
+  'Lacking Understanding of Business',
+  'Inconsistent information',
+  'Document quality concerns',
+  'Unusual account purpose',
+  'Source of funds concern',
+  'High Risk Jurisdiction involvement'
 ];
 
 const tabs = document.querySelectorAll('.tab');
@@ -434,17 +358,15 @@ const clearBtn = document.getElementById('clearBtn');
 const autoGenerate = document.getElementById('autoGenerate');
 const includeEmptySections = document.getElementById('includeEmptySections');
 const useMarkdownHeadings = document.getElementById('useMarkdownHeadings');
-const macroGrid = document.getElementById('macroGrid');
-const macroEditToggle = document.getElementById('macroEditToggle');
-const macroEditorHint = document.getElementById('macroEditorHint');
+const newRiskFactor = document.getElementById('newRiskFactor');
+const addRiskFactorBtn = document.getElementById('addRiskFactorBtn');
+const riskFactorManager = document.getElementById('riskFactorManager');
+const riskFactorsContainer = document.getElementById('riskFactors');
 
-let activeTextTarget = null;
-let macroEditMode = false;
-let macros = loadMacros();
+let riskFactorOptions = [...defaultRiskFactors];
 
 const formIds = [
-  'caseType', 'decision', 'riskLevel', 'confidence', 'summary', 'evidence', 'actionTaken', 'rationaleNotes',
-  'applicantName', 'dob', 'idType', 'idCountry', 'documentNumber', 'expiryDate', 'idvNotes',
+  'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes',
   'includeEmptySections', 'useMarkdownHeadings', 'autoGenerate'
 ];
 
@@ -472,34 +394,19 @@ function buildSection(title, lines) {
 
 function buildOutput() {
   const riskFactors = getCheckedValues('riskFactors');
-  const verificationChecks = getCheckedValues('verificationChecks');
 
   const rationaleLines = [
-    document.getElementById('caseType').value && `**Case Type:** ${document.getElementById('caseType').value}`,
     document.getElementById('decision').value && `**Decision:** ${document.getElementById('decision').value}`,
     document.getElementById('riskLevel').value && `**Risk Level:** ${document.getElementById('riskLevel').value}`,
-    document.getElementById('confidence').value && `**Confidence:** ${document.getElementById('confidence').value}`,
     document.getElementById('summary').value && `**Summary:** ${document.getElementById('summary').value}`,
     document.getElementById('evidence').value && `**Nature of Business:** ${document.getElementById('evidence').value}`,
-    riskFactors.length && `**Risk Factors:** ${riskFactors.join('; ')}`,
+    riskFactors.length ? `**Risk Factors:** ${riskFactors.join('; ')}` : '**Risk Factors:** No additional risk factors identified.',
     document.getElementById('actionTaken').value && `**Action Taken:** ${document.getElementById('actionTaken').value}`,
     document.getElementById('rationaleNotes').value && `**Additional Notes:** ${document.getElementById('rationaleNotes').value}`,
   ];
 
-  const idvLines = [
-    document.getElementById('applicantName').value && `**Applicant:** ${document.getElementById('applicantName').value}`,
-    document.getElementById('dob').value && `**DOB:** ${document.getElementById('dob').value}`,
-    document.getElementById('idType').value && `**ID Type:** ${document.getElementById('idType').value}`,
-    document.getElementById('idCountry').value && `**Issuing Country:** ${document.getElementById('idCountry').value}`,
-    document.getElementById('documentNumber').value && `**Document Number:** ${document.getElementById('documentNumber').value}`,
-    document.getElementById('expiryDate').value && `**Expiry Date:** ${document.getElementById('expiryDate').value}`,
-    verificationChecks.length && `**Verification Checks:** ${verificationChecks.join('; ')}`,
-    document.getElementById('idvNotes').value && `**IDV Notes:** ${document.getElementById('idvNotes').value}`,
-  ];
-
   const sections = [
-    buildSection('Rationale', rationaleLines),
-    buildSection('IDV', idvLines)
+    buildSection('Rationale', rationaleLines)
   ].filter(Boolean);
 
   output.value = sections.join('\n\n');
@@ -514,7 +421,7 @@ function saveState() {
     state[id] = el.type === 'checkbox' ? el.checked : el.value;
   });
   state.riskFactors = getCheckedValues('riskFactors');
-  state.verificationChecks = getCheckedValues('verificationChecks');
+  state.riskFactorOptions = riskFactorOptions;
   state.output = output.value;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
@@ -531,13 +438,13 @@ function restoreState() {
       else el.value = state[id];
     });
 
+    if (Array.isArray(state.riskFactorOptions) && state.riskFactorOptions.length) {
+      riskFactorOptions = [...state.riskFactorOptions];
+    }
+    renderRiskFactors();
+
     (state.riskFactors || []).forEach(value => {
       const checkbox = document.querySelector(`#riskFactors input[value="${CSS.escape(value)}"]`);
-      if (checkbox) checkbox.checked = true;
-    });
-
-    (state.verificationChecks || []).forEach(value => {
-      const checkbox = document.querySelector(`#verificationChecks input[value="${CSS.escape(value)}"]`);
       if (checkbox) checkbox.checked = true;
     });
 
@@ -547,73 +454,32 @@ function restoreState() {
   }
 }
 
-function loadMacros() {
-  const raw = localStorage.getItem(MACRO_KEY);
-  if (!raw) return [...defaultMacros];
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return [...defaultMacros];
-  }
-}
+function renderRiskFactors() {
+  riskFactorsContainer.innerHTML = '';
+  riskFactorManager.innerHTML = '';
 
-function saveMacros() {
-  localStorage.setItem(MACRO_KEY, JSON.stringify(macros));
-}
+  riskFactorOptions.forEach(factor => {
+    const option = document.createElement('label');
+    option.className = 'pill';
+    option.innerHTML = `<input type="checkbox" value="${escapeHtml(factor)}" /> ${escapeHtml(factor)}`;
+    riskFactorsContainer.appendChild(option);
 
-function renderMacros() {
-  macroGrid.innerHTML = '';
-  macros.forEach((macro, index) => {
-    const button = document.createElement('button');
-    button.className = `macro ${macroEditMode ? 'editing' : ''}`;
-    button.type = 'button';
-    button.innerHTML = `<strong>${escapeHtml(macro.label)}</strong><small>${escapeHtml(macro.text)}</small>`;
-    button.addEventListener('click', () => {
-      if (macroEditMode) {
-        renameMacro(index);
-      } else {
-        insertMacroText(macro.text);
-      }
+    const managerItem = document.createElement('div');
+    managerItem.className = 'risk-factor-item';
+    managerItem.innerHTML = `<span>${escapeHtml(factor)}</span>`;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = 'Remove';
+    removeBtn.addEventListener('click', () => {
+      riskFactorOptions = riskFactorOptions.filter(item => item !== factor);
+      renderRiskFactors();
+      if (autoGenerate.checked) buildOutput();
+      else saveState();
     });
-    macroGrid.appendChild(button);
+    managerItem.appendChild(removeBtn);
+    riskFactorManager.appendChild(managerItem);
   });
-}
-
-function renameMacro(index) {
-  const nextLabel = prompt('Rename this macro button:', macros[index].label);
-  if (nextLabel === null) return;
-  const trimmed = nextLabel.trim();
-  if (!trimmed) return;
-  macros[index].label = trimmed;
-
-  const nextText = prompt('Update the macro text:', macros[index].text);
-  if (nextText !== null && nextText.trim()) {
-    macros[index].text = nextText.trim();
-  }
-
-  saveMacros();
-  renderMacros();
-}
-
-function insertMacroText(text) {
-  const target = activeTextTarget;
-  if (!target || !['TEXTAREA', 'INPUT'].includes(target.tagName)) return;
-
-  const start = target.selectionStart ?? target.value.length;
-  const end = target.selectionEnd ?? target.value.length;
-  const prefix = target.value.slice(0, start);
-  const suffix = target.value.slice(end);
-  const needsSpaceBefore = prefix && !/[\s\n]$/.test(prefix);
-  const needsSpaceAfter = suffix && !/^[\s\n]/.test(suffix);
-
-  const insertion = `${needsSpaceBefore ? ' ' : ''}${text}${needsSpaceAfter ? ' ' : ''}`;
-  target.value = `${prefix}${insertion}${suffix}`;
-  target.focus();
-
-  const newCaret = prefix.length + insertion.length;
-  target.setSelectionRange(newCaret, newCaret);
-  if (autoGenerate.checked) buildOutput();
-  else saveState();
 }
 
 function escapeHtml(str) {
@@ -626,10 +492,6 @@ function escapeHtml(str) {
 }
 
 [...document.querySelectorAll('input, textarea, select')].forEach(el => {
-  el.addEventListener('focus', () => {
-    if (['TEXTAREA', 'INPUT'].includes(el.tagName)) activeTextTarget = el;
-  });
-
   el.addEventListener('input', () => {
     if (autoGenerate.checked) buildOutput();
     else saveState();
@@ -639,6 +501,27 @@ function escapeHtml(str) {
     if (autoGenerate.checked) buildOutput();
     else saveState();
   });
+});
+
+addRiskFactorBtn.addEventListener('click', () => {
+  const value = newRiskFactor.value.trim();
+  if (!value) return;
+  if (riskFactorOptions.includes(value)) {
+    newRiskFactor.value = '';
+    return;
+  }
+  riskFactorOptions.push(value);
+  newRiskFactor.value = '';
+  renderRiskFactors();
+  if (autoGenerate.checked) buildOutput();
+  else saveState();
+});
+
+newRiskFactor.addEventListener('keydown', event => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    addRiskFactorBtn.click();
+  }
 });
 
 generateBtn.addEventListener('click', buildOutput);
@@ -657,6 +540,8 @@ copyBtn.addEventListener('click', async () => {
 clearBtn.addEventListener('click', () => {
   if (!confirm('Clear all fields and reset the preview?')) return;
   localStorage.removeItem(STORAGE_KEY);
+  riskFactorOptions = [...defaultRiskFactors];
+  renderRiskFactors();
   [...document.querySelectorAll('input, textarea, select')].forEach(el => {
     if (el.type === 'checkbox') el.checked = false;
     else if (el.tagName === 'SELECT') el.selectedIndex = 0;
@@ -668,15 +553,13 @@ clearBtn.addEventListener('click', () => {
   saveState();
 });
 
-macroEditToggle.addEventListener('click', () => {
-  macroEditMode = !macroEditMode;
-  macroEditorHint.classList.toggle('hidden', !macroEditMode);
-  macroEditToggle.textContent = macroEditMode ? 'Finish Editing' : 'Edit Macro Labels';
-  renderMacros();
+riskFactorsContainer.addEventListener('change', () => {
+  if (autoGenerate.checked) buildOutput();
+  else saveState();
 });
 
+renderRiskFactors();
 restoreState();
-renderMacros();
 if (autoGenerate.checked) buildOutput();
 
   </script>
