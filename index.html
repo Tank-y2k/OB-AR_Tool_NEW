@@ -277,6 +277,16 @@ input:focus, select:focus, textarea:focus, button:focus {
           <span>Additional Notes</span>
           <textarea id="rationaleNotes" rows="3" placeholder="Optional closing detail."></textarea>
         </label>
+
+        <label>
+          <span>CIFAS Check</span>
+          <select id="cifasCheck">
+            <option value="">Select an option</option>
+            <option value="CIFAS checked">CIFAS checked</option>
+            <option value="No check required">No check required</option>
+            <option value="N/A">N/A</option>
+          </select>
+        </label>
       </section>
 
       <section class="panel" id="panel-settings">
@@ -366,7 +376,7 @@ const riskFactorsContainer = document.getElementById('riskFactors');
 let riskFactorOptions = [...defaultRiskFactors];
 
 const formIds = [
-  'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes',
+  'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes', 'cifasCheck',
   'includeEmptySections', 'useMarkdownHeadings', 'autoGenerate'
 ];
 
@@ -395,18 +405,27 @@ function buildSection(title, lines) {
 function buildOutput() {
   const riskFactors = getCheckedValues('riskFactors');
 
-  const rationaleLines = [
+  const summaryLines = [
     document.getElementById('decision').value && `**Decision:** ${document.getElementById('decision').value}`,
-    document.getElementById('riskLevel').value && `**Risk Level:** ${document.getElementById('riskLevel').value}`,
     document.getElementById('summary').value && `**Summary:** ${document.getElementById('summary').value}`,
-    document.getElementById('evidence').value && `**Nature of Business:** ${document.getElementById('evidence').value}`,
+  ];
+
+  const businessUnderstandingLines = [
+    document.getElementById('riskLevel').value && `**Risk Level:** ${document.getElementById('riskLevel').value}`,
+    document.getElementById('evidence').value && `**Business Understanding:** ${document.getElementById('evidence').value}`,
     riskFactors.length ? `**Risk Factors:** ${riskFactors.join('; ')}` : '**Risk Factors:** No additional risk factors identified.',
     document.getElementById('actionTaken').value && `**Action Taken:** ${document.getElementById('actionTaken').value}`,
+  ];
+
+  const additionalLines = [
     document.getElementById('rationaleNotes').value && `**Additional Notes:** ${document.getElementById('rationaleNotes').value}`,
+    document.getElementById('cifasCheck').value && `**CIFAS Check:** ${document.getElementById('cifasCheck').value}`,
   ];
 
   const sections = [
-    buildSection('Rationale', rationaleLines)
+    buildSection('Summary', summaryLines),
+    buildSection('Business understanding', businessUnderstandingLines),
+    buildSection('Additional', additionalLines)
   ].filter(Boolean);
 
   output.value = sections.join('\n\n');
@@ -441,12 +460,9 @@ function restoreState() {
     if (Array.isArray(state.riskFactorOptions) && state.riskFactorOptions.length) {
       riskFactorOptions = [...state.riskFactorOptions];
     }
-    renderRiskFactors();
 
-    (state.riskFactors || []).forEach(value => {
-      const checkbox = document.querySelector(`#riskFactors input[value="${CSS.escape(value)}"]`);
-      if (checkbox) checkbox.checked = true;
-    });
+    const savedRiskFactors = Array.isArray(state.riskFactors) ? state.riskFactors : null;
+    renderRiskFactors(savedRiskFactors);
 
     output.value = state.output || '';
   } catch (err) {
@@ -454,7 +470,11 @@ function restoreState() {
   }
 }
 
-function renderRiskFactors() {
+function renderRiskFactors(checkedValues = null) {
+  const hasExistingOptions = !!riskFactorsContainer.querySelector('input[type="checkbox"]');
+  const checkedSet = checkedValues
+    ? new Set(checkedValues)
+    : new Set(getCheckedValues('riskFactors'));
   riskFactorsContainer.innerHTML = '';
   riskFactorManager.innerHTML = '';
 
@@ -463,6 +483,15 @@ function renderRiskFactors() {
     option.className = 'pill';
     option.innerHTML = `<input type="checkbox" value="${escapeHtml(factor)}" /> ${escapeHtml(factor)}`;
     riskFactorsContainer.appendChild(option);
+
+    const checkbox = option.querySelector('input[type="checkbox"]');
+    if (checkedValues) {
+      checkbox.checked = checkedSet.has(factor);
+    } else if (!hasExistingOptions) {
+      checkbox.checked = true;
+    } else {
+      checkbox.checked = checkedSet.has(factor);
+    }
 
     const managerItem = document.createElement('div');
     managerItem.className = 'risk-factor-item';
@@ -546,6 +575,9 @@ clearBtn.addEventListener('click', () => {
     if (el.type === 'checkbox') el.checked = false;
     else if (el.tagName === 'SELECT') el.selectedIndex = 0;
     else el.value = '';
+  });
+  [...document.querySelectorAll('#riskFactors input[type="checkbox"]')].forEach(cb => {
+    cb.checked = true;
   });
   useMarkdownHeadings.checked = true;
   autoGenerate.checked = true;
