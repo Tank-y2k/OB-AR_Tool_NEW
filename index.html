@@ -643,7 +643,7 @@ function getCheckedValues(containerId) {
 }
 
 function makeHeading(title) {
-  return useMarkdownHeadings.checked ? `## ${title}` : `${title.toUpperCase()}`;
+  return useMarkdownHeadings.checked ? `### ${title}` : `${title.toUpperCase()}`;
 }
 
 function buildSection(title, lines) {
@@ -658,7 +658,7 @@ function buildOutput() {
 
   const summaryLines = [
     document.getElementById('decision').value && `**Decision:** ${document.getElementById('decision').value}`,
-    document.getElementById('summary').value && `**Summary:** ${document.getElementById('summary').value}`,
+    document.getElementById('summary').value && `**Rationale:** ${document.getElementById('summary').value}`,
   ];
 
   const businessUnderstandingLines = [
@@ -674,9 +674,9 @@ function buildOutput() {
   ];
 
   const sections = [
-    buildSection('Summary', summaryLines),
-    buildSection('Business understanding', businessUnderstandingLines),
-    buildSection('Additional', additionalLines)
+    buildSection('Summary of Decision', summaryLines),
+    buildSection('Do you understand the customer's nature of buiness, is it plausible and have you addressed associated risk factors', businessUnderstandingLines),
+    buildSection('Links/CIFAS', additionalLines)
   ].filter(Boolean);
 
   output.value = sections.join('\n\n');
