@@ -77,6 +77,10 @@ h1 span { color: var(--accent); }
 
 .sidebar-actions { display: grid; gap: 10px; }
 .content, .output-panel { padding: 22px; }
+.output-panel {
+  display: flex;
+  flex-direction: column;
+}
 .panel { display: none; }
 .panel.active { display: block; }
 .panel-header { margin-bottom: 18px; }
@@ -257,7 +261,7 @@ select:hover {
   border-radius: 12px;
   background: var(--field-bg);
   overflow-y: auto;
-  max-height: 34vh;
+  flex: 1;
 }
 
 .preview-shell h1,
@@ -541,7 +545,7 @@ select:hover {
         <h2>Output Preview</h2>
         <p>Ready to copy into your workflow. Markdown formatting is rendered below.</p>
       </div>
-      <textarea id="output" rows="28" placeholder="Generated output will appear here."></textarea>
+      <textarea id="output" class="hidden" aria-hidden="true" tabindex="-1"></textarea>
       <div id="outputPreview" class="preview-shell" aria-live="polite"></div>
       <div class="footer-note">Preferences and risk factors are saved locally in your browser.</div>
     </aside>
@@ -614,6 +618,10 @@ const panelColor = document.getElementById('panelColor');
 const textboxColor = document.getElementById('textboxColor');
 const textColor = document.getElementById('textColor');
 const outputPreview = document.getElementById('outputPreview');
+
+function syncGenerateButtonVisibility() {
+  generateBtn.classList.toggle('hidden', autoGenerate.checked);
+}
 
 let riskFactorOptions = [...defaultRiskFactors];
 let cifasOptions = [...defaultCifasOptions];
@@ -1013,7 +1021,15 @@ function escapeHtml(str) {
     .replaceAll("'", '&#039;');
 }
 
+autoGenerate.addEventListener('change', () => {
+  syncGenerateButtonVisibility();
+  if (autoGenerate.checked) buildOutput();
+  else saveState();
+});
+
 [...document.querySelectorAll('input, textarea, select')].forEach(el => {
+  if (el === autoGenerate) return;
+
   el.addEventListener('input', () => {
     if (autoGenerate.checked) buildOutput();
     else saveState();
@@ -1113,6 +1129,7 @@ clearBtn.addEventListener('click', () => {
   });
   useMarkdownHeadings.checked = true;
   autoGenerate.checked = true;
+  syncGenerateButtonVisibility();
   customTheme = {
     accent: presetThemes.light.accent,
     bg: presetThemes.light.bg,
@@ -1135,6 +1152,7 @@ renderRiskFactors();
 renderCifasOptions();
 applyTheme('light');
 restoreState();
+syncGenerateButtonVisibility();
 renderOutputPreview(output.value);
 if (autoGenerate.checked) buildOutput();
 
