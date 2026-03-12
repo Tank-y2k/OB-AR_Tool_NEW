@@ -403,6 +403,10 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <input type="color" id="panelColor" value="#f8fbff" />
                   </label>
                   <label>
+                    <span>Text box colour</span>
+                    <input type="color" id="textboxColor" value="#ffffff" />
+                  </label>
+                  <label>
                     <span>Text colour</span>
                     <input type="color" id="textColor" value="#172231" />
                   </label>
@@ -522,6 +526,7 @@ const themeMode = document.getElementById('themeMode');
 const accentColor = document.getElementById('accentColor');
 const bgColor = document.getElementById('bgColor');
 const panelColor = document.getElementById('panelColor');
+const textboxColor = document.getElementById('textboxColor');
 const textColor = document.getElementById('textColor');
 
 let riskFactorOptions = [...defaultRiskFactors];
@@ -531,18 +536,19 @@ let customTheme = {
   accent: presetThemes.light.accent,
   bg: presetThemes.light.bg,
   panel: presetThemes.light.panel,
+  fieldBg: presetThemes.light.fieldBg,
   text: presetThemes.light.text
 };
 
 const formIds = [
   'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes', 'cifasCheck',
   'includeEmptySections', 'useMarkdownHeadings', 'autoGenerate',
-  'themeMode', 'accentColor', 'bgColor', 'panelColor', 'textColor'
+  'themeMode', 'accentColor', 'bgColor', 'panelColor', 'textboxColor', 'textColor'
 ];
 
 function updateThemeInputsDisabled() {
   const isCustom = themeMode.value === 'custom';
-  [accentColor, bgColor, panelColor, textColor].forEach(input => {
+  [accentColor, bgColor, panelColor, textboxColor, textColor].forEach(input => {
     input.disabled = !isCustom;
   });
 }
@@ -557,9 +563,9 @@ function applyTheme(mode = 'light') {
       accent: customTheme.accent,
       bg: customTheme.bg,
       panel: customTheme.panel,
+      fieldBg: customTheme.fieldBg,
       text: customTheme.text,
       panelAlt: customTheme.panel,
-      fieldBg: '#ffffff',
       muted: customTheme.text,
       border: '#c8d2e2',
       bgStart: customTheme.bg,
@@ -583,6 +589,7 @@ function applyTheme(mode = 'light') {
   accentColor.value = customTheme.accent;
   bgColor.value = customTheme.bg;
   panelColor.value = customTheme.panel;
+  textboxColor.value = customTheme.fieldBg;
   textColor.value = customTheme.text;
   updateThemeInputsDisabled();
 }
@@ -592,6 +599,7 @@ function syncCustomThemeFromInputs() {
     accent: accentColor.value,
     bg: bgColor.value,
     panel: panelColor.value,
+    fieldBg: textboxColor.value,
     text: textColor.value
   };
 }
@@ -904,7 +912,7 @@ themeMode.addEventListener('change', () => {
   else saveState();
 });
 
-[accentColor, bgColor, panelColor, textColor].forEach(input => {
+[accentColor, bgColor, panelColor, textboxColor, textColor].forEach(input => {
   input.addEventListener('input', () => {
     syncCustomThemeFromInputs();
     if (themeMode.value !== 'custom') themeMode.value = 'custom';
@@ -948,6 +956,7 @@ clearBtn.addEventListener('click', () => {
     accent: presetThemes.light.accent,
     bg: presetThemes.light.bg,
     panel: presetThemes.light.panel,
+    fieldBg: presetThemes.light.fieldBg,
     text: presetThemes.light.text
   };
   applyTheme('light');
