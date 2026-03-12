@@ -249,6 +249,63 @@ select:hover {
   line-height: 1.5;
 }
 
+.preview-shell {
+  margin-top: 12px;
+  padding: 14px;
+  min-height: 180px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--field-bg);
+  overflow-y: auto;
+  max-height: 34vh;
+}
+
+.preview-shell h1,
+.preview-shell h2,
+.preview-shell h3 {
+  margin: 0 0 8px;
+}
+
+.preview-shell p {
+  margin: 0 0 8px;
+}
+
+.preview-shell ul {
+  margin: 0 0 10px 20px;
+}
+
+.preview-shell li {
+  margin-bottom: 6px;
+}
+
+.md-bold { font-weight: 700; }
+.md-italic { font-style: italic; }
+.md-highlight-green {
+  background: color-mix(in srgb, var(--success) 26%, transparent);
+  padding: 0 3px;
+  border-radius: 4px;
+}
+.md-highlight-red {
+  background: color-mix(in srgb, var(--danger) 26%, transparent);
+  padding: 0 3px;
+  border-radius: 4px;
+}
+.md-highlight-amber {
+  background: color-mix(in srgb, #ffb000 30%, transparent);
+  padding: 0 3px;
+  border-radius: 4px;
+}
+.md-highlight-accent {
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+  padding: 0 3px;
+  border-radius: 4px;
+}
+
+.md-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
 @media (min-width: 1301px) {
   .sidebar, .content, .output-panel { height: calc(100vh - 36px); }
   .content { overflow-y: auto; }
@@ -482,9 +539,10 @@ select:hover {
     <aside class="output-panel">
       <div class="panel-header">
         <h2>Output Preview</h2>
-        <p>Ready to copy into your workflow.</p>
+        <p>Ready to copy into your workflow. Markdown formatting is rendered below.</p>
       </div>
       <textarea id="output" rows="28" placeholder="Generated output will appear here."></textarea>
+      <div id="outputPreview" class="preview-shell" aria-live="polite"></div>
       <div class="footer-note">Preferences and risk factors are saved locally in your browser.</div>
     </aside>
   </div>
@@ -555,6 +613,7 @@ const bgColor = document.getElementById('bgColor');
 const panelColor = document.getElementById('panelColor');
 const textboxColor = document.getElementById('textboxColor');
 const textColor = document.getElementById('textColor');
+const outputPreview = document.getElementById('outputPreview');
 
 let riskFactorOptions = [...defaultRiskFactors];
 let cifasOptions = [...defaultCifasOptions];
@@ -680,8 +739,80 @@ function buildOutput() {
   ].filter(Boolean);
 
   output.value = sections.join('\n\n');
+  renderOutputPreview(output.value);
   saveState();
   return output.value;
+}
+
+function formatInlineMarkdown(line) {
+  return line
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_match, label, rawUrl) => {
+      const href = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    })
+    .replace(/\+\+\+([^+]+)\+\+\+/g, '<span class="md-highlight-accent">$1</span>')
+    .replace(/!!!([^!]+)!!!/g, '<span class="md-highlight-amber">$1</span>')
+    .replace(/!!([^!]+)!!/g, '<span class="md-highlight-red">$1</span>')
+    .replace(/\+\+([^+]+)\+\+/g, '<span class="md-highlight-green">$1</span>')
+    .replace(/\*\*([^*]+)\*\*/g, '<span class="md-bold">$1</span>')
+    .replace(/\*([^*]+)\*/g, '<span class="md-italic">$1</span>');
+}
+
+function renderOutputPreview(markdownText) {
+  const safeText = escapeHtml(markdownText || '');
+  if (!safeText.trim()) {
+    outputPreview.innerHTML = '<p class="md-empty">Generated markdown preview appears here.</p>';
+    return;
+  }
+
+  const lines = safeText.split('\n');
+  const html = [];
+  let isInList = false;
+
+  lines.forEach(rawLine => {
+    const line = rawLine.trim();
+    if (!line) {
+      if (isInList) {
+        html.push('</ul>');
+        isInList = false;
+      }
+      return;
+    }
+
+    const h3 = line.match(/^###\s+(.+)/);
+    const h2 = line.match(/^##\s+(.+)/);
+    const h1 = line.match(/^#\s+(.+)/);
+    const bullet = line.match(/^-\s+(.+)/);
+
+    if (h1 || h2 || h3) {
+      if (isInList) {
+        html.push('</ul>');
+        isInList = false;
+      }
+      if (h1) html.push(`<h1>${formatInlineMarkdown(h1[1])}</h1>`);
+      else if (h2) html.push(`<h2>${formatInlineMarkdown(h2[1])}</h2>`);
+      else html.push(`<h3>${formatInlineMarkdown(h3[1])}</h3>`);
+      return;
+    }
+
+    if (bullet) {
+      if (!isInList) {
+        html.push('<ul>');
+        isInList = true;
+      }
+      html.push(`<li>${formatInlineMarkdown(bullet[1])}</li>`);
+      return;
+    }
+
+    if (isInList) {
+      html.push('</ul>');
+      isInList = false;
+    }
+    html.push(`<p>${formatInlineMarkdown(line)}</p>`);
+  });
+
+  if (isInList) html.push('</ul>');
+  outputPreview.innerHTML = html.join('');
 }
 
 function saveState() {
@@ -728,6 +859,7 @@ function restoreState() {
     renderCifasOptions(state.cifasCheck || '');
 
     output.value = state.output || '';
+    renderOutputPreview(output.value);
   } catch (err) {
     console.error('Could not restore state', err);
   }
@@ -990,6 +1122,7 @@ clearBtn.addEventListener('click', () => {
   };
   applyTheme('light');
   output.value = '';
+  renderOutputPreview('');
   saveState();
 });
 
@@ -1002,6 +1135,7 @@ renderRiskFactors();
 renderCifasOptions();
 applyTheme('light');
 restoreState();
+renderOutputPreview(output.value);
 if (autoGenerate.checked) buildOutput();
 
   </script>
