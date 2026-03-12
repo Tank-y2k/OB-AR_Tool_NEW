@@ -106,11 +106,14 @@ h1 span { color: var(--accent); }
 }
 
 .macro-toolbar {
-  margin-bottom: 16px;
+  position: fixed;
+  z-index: 25;
+  width: min(420px, calc(100vw - 24px));
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--panel-alt);
+  box-shadow: 0 10px 26px rgba(16, 24, 40, 0.2);
 }
 
 .macro-toolbar-title {
@@ -462,9 +465,9 @@ select:hover {
             <p>Build the main decision summary with consistent structure.</p>
           </div>
           <div class="header-actions">
+            <button id="toggleMacrosBtn" type="button" class="icon-btn" title="Toggle custom macros" aria-label="Toggle custom macros">🧩</button>
             <button id="toggleSettingsBtn" type="button" class="icon-btn" title="Open settings" aria-label="Open settings">⚙️</button>
             <button id="editDefaultsBtn" type="button" class="icon-btn" title="Save current rationale values as Clear Form defaults" aria-label="Save current rationale values as Clear Form defaults">💾</button>
-            <button id="toggleMacrosBtn" type="button" class="icon-btn" title="Toggle custom macros" aria-label="Toggle custom macros">🧩</button>
           </div>
         </div>
 
@@ -781,6 +784,7 @@ let riskFactorOptions = [...defaultRiskFactors];
 let cifasOptions = [...defaultCifasOptions];
 let macroOptions = [...defaultMacros];
 let lastFocusedTextField = null;
+let isMacroToolbarOpen = false;
 let activeThemeMode = 'light';
 let customTheme = {
   accent: presetThemes.light.accent,
@@ -870,6 +874,37 @@ function syncCustomThemeFromInputs() {
 function setSettingsModalOpen(isOpen) {
   settingsModal.classList.toggle('open', isOpen);
   settingsModal.setAttribute('aria-hidden', String(!isOpen));
+}
+
+function positionMacroToolbar() {
+  if (!isMacroToolbarOpen) return;
+
+  const defaultAnchorRect = toggleMacrosBtn.getBoundingClientRect();
+  const anchorRect = lastFocusedTextField instanceof HTMLTextAreaElement || lastFocusedTextField instanceof HTMLInputElement
+    ? lastFocusedTextField.getBoundingClientRect()
+    : defaultAnchorRect;
+
+  const toolbarWidth = Math.min(420, window.innerWidth - 24);
+  const spacing = 10;
+  const maxLeft = Math.max(12, window.innerWidth - toolbarWidth - 12);
+  const computedLeft = Math.min(Math.max(12, anchorRect.left), maxLeft);
+  let computedTop = anchorRect.bottom + spacing;
+
+  const projectedBottom = computedTop + macroToolbar.offsetHeight;
+  if (projectedBottom > window.innerHeight - 12) {
+    computedTop = Math.max(12, anchorRect.top - macroToolbar.offsetHeight - spacing);
+  }
+
+  macroToolbar.style.left = `${computedLeft}px`;
+  macroToolbar.style.top = `${computedTop}px`;
+}
+
+function setMacroToolbarOpen(isOpen) {
+  isMacroToolbarOpen = isOpen;
+  macroToolbar.classList.toggle('hidden', !isOpen);
+  if (isOpen) {
+    positionMacroToolbar();
+  }
 }
 
 function getCheckedValues(containerId) {
@@ -1335,12 +1370,16 @@ autoGenerate.addEventListener('change', () => {
 [...document.querySelectorAll('textarea, input[type="text"]')].forEach(el => {
   el.addEventListener('focus', () => {
     lastFocusedTextField = el;
+    positionMacroToolbar();
   });
 });
 
 toggleMacrosBtn.addEventListener('click', () => {
-  macroToolbar.classList.toggle('hidden');
+  setMacroToolbarOpen(!isMacroToolbarOpen);
 });
+
+window.addEventListener('resize', positionMacroToolbar);
+window.addEventListener('scroll', positionMacroToolbar, true);
 
 addRiskFactorBtn.addEventListener('click', () => {
   const value = newRiskFactor.value.trim();
