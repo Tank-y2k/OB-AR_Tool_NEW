@@ -7,16 +7,19 @@
   <!-- <link rel="stylesheet" href="styles.css" /> -->
   <style>
   :root {
-  --bg: #0f1115;
-  --panel: #171a21;
-  --panel-alt: #1f2430;
-  --border: #30384a;
-  --text: #e8ecf1;
-  --muted: #99a3b3;
-  --accent: #7cc4ff;
-  --danger: #ff7d7d;
-  --success: #92e29b;
-  --shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+  --bg: #edf2f8;
+  --panel: #f8fbff;
+  --panel-alt: #e8eef7;
+  --field-bg: #ffffff;
+  --border: #c8d2e2;
+  --text: #172231;
+  --muted: #4f6078;
+  --accent: #2e7de0;
+  --danger: #d95151;
+  --success: #2f9e5a;
+  --bg-gradient-start: #e8eff9;
+  --bg-gradient-end: #dce6f6;
+  --shadow: 0 12px 30px rgba(29, 45, 72, 0.12);
   --radius: 16px;
 }
 
@@ -25,7 +28,7 @@ html, body { height: 100%; }
 body {
   margin: 0;
   font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  background: linear-gradient(180deg, #0d1016 0%, #141925 100%);
+  background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
   color: var(--text);
 }
 
@@ -38,7 +41,7 @@ body {
 }
 
 .sidebar, .content, .output-panel {
-  background: rgba(23, 26, 33, 0.92);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -89,13 +92,13 @@ label { display: block; margin-bottom: 14px; }
 label span, .label-title {
   display: block;
   margin-bottom: 8px;
-  color: #dce4ef;
+  color: var(--text);
   font-weight: 600;
 }
 input, select, textarea {
   width: 100%;
   border: 1px solid var(--border);
-  background: #10141c;
+  background: var(--field-bg);
   color: var(--text);
   padding: 12px 14px;
   border-radius: 12px;
@@ -115,7 +118,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 }
 .pill {
   border: 1px solid var(--border);
-  background: #121722;
+  background: var(--field-bg);
   border-radius: 999px;
   padding: 10px 14px;
   display: flex;
@@ -143,12 +146,14 @@ input:focus, select:focus, textarea:focus, button:focus {
   padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: #10141c;
+  background: var(--field-bg);
 }
 
 .risk-factor-item .entry-text {
   flex: 1 1 280px;
   min-width: 220px;
+  color: var(--text);
+  background: var(--field-bg);
 }
 
 .settings-item-actions {
@@ -175,10 +180,47 @@ input:focus, select:focus, textarea:focus, button:focus {
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: #121722;
+  background: var(--field-bg);
 }
 .switch-row p { margin: 6px 0 0; }
 .switch-row input[type="checkbox"] { width: 22px; height: 22px; }
+
+.settings-group {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--panel-alt);
+}
+
+.settings-group summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  font-weight: 700;
+}
+
+.settings-group summary::-webkit-details-marker { display: none; }
+
+.settings-group summary::after {
+  content: '▾';
+  float: right;
+}
+
+.settings-group[open] summary::after {
+  content: '▴';
+}
+
+.settings-group-content {
+  display: grid;
+  gap: 12px;
+  padding: 0 12px 12px;
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
 
 #output {
   min-height: 70vh;
@@ -307,53 +349,101 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="settings-list">
-          <label class="switch-row">
-            <div>
-              <strong>Include empty sections</strong>
-              <p>Show section headers even when the section has no content.</p>
-            </div>
-            <input type="checkbox" id="includeEmptySections" />
-          </label>
+          <details class="settings-group" open>
+            <summary>Format</summary>
+            <div class="settings-group-content">
+              <label class="switch-row">
+                <div>
+                  <strong>Include empty sections</strong>
+                  <p>Show section headers even when the section has no content.</p>
+                </div>
+                <input type="checkbox" id="includeEmptySections" />
+              </label>
 
-          <label class="switch-row">
-            <div>
-              <strong>Use markdown headings</strong>
-              <p>Formats output with simple markdown for easy paste into MP.</p>
-            </div>
-            <input type="checkbox" id="useMarkdownHeadings" checked />
-          </label>
+              <label class="switch-row">
+                <div>
+                  <strong>Use markdown headings</strong>
+                  <p>Formats output with simple markdown for easy paste into MP.</p>
+                </div>
+                <input type="checkbox" id="useMarkdownHeadings" checked />
+              </label>
 
-          <label class="switch-row">
-            <div>
-              <strong>Auto-generate while typing</strong>
-              <p>Keeps the output preview updated as you work.</p>
-            </div>
-            <input type="checkbox" id="autoGenerate" checked />
-          </label>
+              <label class="switch-row">
+                <div>
+                  <strong>Auto-generate while typing</strong>
+                  <p>Keeps the output preview updated as you work.</p>
+                </div>
+                <input type="checkbox" id="autoGenerate" checked />
+              </label>
 
-          <div class="switch-row" style="display:block;">
-            <div style="margin-bottom:12px;">
-              <strong>Risk factor buttons</strong>
-              <p>Add, edit, and remove the selectable risk factors shown in the rationale section.</p>
+              <div class="switch-row" style="display:block;">
+                <div style="margin-bottom:12px;">
+                  <strong>Theme mode</strong>
+                  <p>Light mode is the default. You can still switch to dark mode and customise colours.</p>
+                </div>
+                <div class="theme-grid">
+                  <label>
+                    <span>Mode</span>
+                    <select id="themeMode">
+                      <option value="light">Light (default)</option>
+                      <option value="dark">Dark</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Accent colour</span>
+                    <input type="color" id="accentColor" value="#2e7de0" />
+                  </label>
+                  <label>
+                    <span>Background colour</span>
+                    <input type="color" id="bgColor" value="#edf2f8" />
+                  </label>
+                  <label>
+                    <span>Panel colour</span>
+                    <input type="color" id="panelColor" value="#f8fbff" />
+                  </label>
+                  <label>
+                    <span>Text colour</span>
+                    <input type="color" id="textColor" value="#172231" />
+                  </label>
+                </div>
+              </div>
             </div>
-            <div class="settings-inline">
-              <input type="text" id="newRiskFactor" placeholder="Add new risk factor" />
-              <button type="button" id="addRiskFactorBtn">Add</button>
-            </div>
-            <div id="riskFactorManager" class="settings-list" style="margin-top:12px;"></div>
-          </div>
+          </details>
 
-          <div class="switch-row" style="display:block;">
-            <div style="margin-bottom:12px;">
-              <strong>CIFAS check options</strong>
-              <p>Add, edit, and remove the options shown in the CIFAS check dropdown.</p>
+          <details class="settings-group" open>
+            <summary>Risk Factors</summary>
+            <div class="settings-group-content">
+              <div class="switch-row" style="display:block;">
+                <div style="margin-bottom:12px;">
+                  <strong>Risk factor buttons</strong>
+                  <p>Add, edit, and remove the selectable risk factors shown in the rationale section.</p>
+                </div>
+                <div class="settings-inline">
+                  <input type="text" id="newRiskFactor" placeholder="Add new risk factor" />
+                  <button type="button" id="addRiskFactorBtn">Add</button>
+                </div>
+                <div id="riskFactorManager" class="settings-list" style="margin-top:12px;"></div>
+              </div>
             </div>
-            <div class="settings-inline">
-              <input type="text" id="newCifasOption" placeholder="Add new CIFAS option" />
-              <button type="button" id="addCifasOptionBtn">Add</button>
+          </details>
+
+          <details class="settings-group" open>
+            <summary>CIFAS</summary>
+            <div class="settings-group-content">
+              <div class="switch-row" style="display:block;">
+                <div style="margin-bottom:12px;">
+                  <strong>CIFAS check options</strong>
+                  <p>Add, edit, and remove the options shown in the CIFAS check dropdown.</p>
+                </div>
+                <div class="settings-inline">
+                  <input type="text" id="newCifasOption" placeholder="Add new CIFAS option" />
+                  <button type="button" id="addCifasOptionBtn">Add</button>
+                </div>
+                <div id="cifasOptionManager" class="settings-list" style="margin-top:12px;"></div>
+              </div>
             </div>
-            <div id="cifasOptionManager" class="settings-list" style="margin-top:12px;"></div>
-          </div>
+          </details>
         </div>
       </section>
     </main>
@@ -384,6 +474,33 @@ const defaultRiskFactors = [
 
 const defaultCifasOptions = ['CIFAS checked', 'No check required', 'N/A'];
 
+const presetThemes = {
+  light: {
+    bg: '#edf2f8',
+    panel: '#f8fbff',
+    panelAlt: '#e8eef7',
+    fieldBg: '#ffffff',
+    border: '#c8d2e2',
+    text: '#172231',
+    muted: '#4f6078',
+    accent: '#2e7de0',
+    bgStart: '#e8eff9',
+    bgEnd: '#dce6f6'
+  },
+  dark: {
+    bg: '#0f1115',
+    panel: '#171a21',
+    panelAlt: '#1f2430',
+    fieldBg: '#10141c',
+    border: '#30384a',
+    text: '#e8ecf1',
+    muted: '#99a3b3',
+    accent: '#7cc4ff',
+    bgStart: '#0d1016',
+    bgEnd: '#141925'
+  }
+};
+
 const tabs = document.querySelectorAll('.tab');
 const panels = document.querySelectorAll('.panel');
 const output = document.getElementById('output');
@@ -401,14 +518,83 @@ const cifasCheck = document.getElementById('cifasCheck');
 const newCifasOption = document.getElementById('newCifasOption');
 const addCifasOptionBtn = document.getElementById('addCifasOptionBtn');
 const cifasOptionManager = document.getElementById('cifasOptionManager');
+const themeMode = document.getElementById('themeMode');
+const accentColor = document.getElementById('accentColor');
+const bgColor = document.getElementById('bgColor');
+const panelColor = document.getElementById('panelColor');
+const textColor = document.getElementById('textColor');
 
 let riskFactorOptions = [...defaultRiskFactors];
 let cifasOptions = [...defaultCifasOptions];
+let activeThemeMode = 'light';
+let customTheme = {
+  accent: presetThemes.light.accent,
+  bg: presetThemes.light.bg,
+  panel: presetThemes.light.panel,
+  text: presetThemes.light.text
+};
 
 const formIds = [
   'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes', 'cifasCheck',
-  'includeEmptySections', 'useMarkdownHeadings', 'autoGenerate'
+  'includeEmptySections', 'useMarkdownHeadings', 'autoGenerate',
+  'themeMode', 'accentColor', 'bgColor', 'panelColor', 'textColor'
 ];
+
+function updateThemeInputsDisabled() {
+  const isCustom = themeMode.value === 'custom';
+  [accentColor, bgColor, panelColor, textColor].forEach(input => {
+    input.disabled = !isCustom;
+  });
+}
+
+function applyTheme(mode = 'light') {
+  activeThemeMode = mode;
+  let theme = mode === 'dark' ? presetThemes.dark : presetThemes.light;
+
+  if (mode === 'custom') {
+    theme = {
+      ...presetThemes.light,
+      accent: customTheme.accent,
+      bg: customTheme.bg,
+      panel: customTheme.panel,
+      text: customTheme.text,
+      panelAlt: customTheme.panel,
+      fieldBg: '#ffffff',
+      muted: customTheme.text,
+      border: '#c8d2e2',
+      bgStart: customTheme.bg,
+      bgEnd: customTheme.bg
+    };
+  }
+
+  const root = document.documentElement;
+  root.style.setProperty('--bg', theme.bg);
+  root.style.setProperty('--panel', theme.panel);
+  root.style.setProperty('--panel-alt', theme.panelAlt);
+  root.style.setProperty('--field-bg', theme.fieldBg);
+  root.style.setProperty('--border', theme.border);
+  root.style.setProperty('--text', theme.text);
+  root.style.setProperty('--muted', theme.muted);
+  root.style.setProperty('--accent', theme.accent);
+  root.style.setProperty('--bg-gradient-start', theme.bgStart);
+  root.style.setProperty('--bg-gradient-end', theme.bgEnd);
+
+  themeMode.value = mode;
+  accentColor.value = customTheme.accent;
+  bgColor.value = customTheme.bg;
+  panelColor.value = customTheme.panel;
+  textColor.value = customTheme.text;
+  updateThemeInputsDisabled();
+}
+
+function syncCustomThemeFromInputs() {
+  customTheme = {
+    accent: accentColor.value,
+    bg: bgColor.value,
+    panel: panelColor.value,
+    text: textColor.value
+  };
+}
 
 function tabTo(panelName) {
   tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === panelName));
@@ -472,6 +658,7 @@ function saveState() {
   state.riskFactors = getCheckedValues('riskFactors');
   state.riskFactorOptions = riskFactorOptions;
   state.cifasOptions = cifasOptions;
+  state.theme = { mode: activeThemeMode, custom: customTheme };
   state.output = output.value;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
@@ -495,6 +682,11 @@ function restoreState() {
     if (Array.isArray(state.cifasOptions) && state.cifasOptions.length) {
       cifasOptions = [...state.cifasOptions];
     }
+
+    if (state.theme?.custom) {
+      customTheme = { ...customTheme, ...state.theme.custom };
+    }
+    applyTheme(state.theme?.mode || 'light');
 
     const savedRiskFactors = Array.isArray(state.riskFactors) ? state.riskFactors : null;
     renderRiskFactors(savedRiskFactors);
@@ -706,6 +898,22 @@ newCifasOption.addEventListener('keydown', event => {
   }
 });
 
+themeMode.addEventListener('change', () => {
+  applyTheme(themeMode.value);
+  if (autoGenerate.checked) buildOutput();
+  else saveState();
+});
+
+[accentColor, bgColor, panelColor, textColor].forEach(input => {
+  input.addEventListener('input', () => {
+    syncCustomThemeFromInputs();
+    if (themeMode.value !== 'custom') themeMode.value = 'custom';
+    applyTheme('custom');
+    if (autoGenerate.checked) buildOutput();
+    else saveState();
+  });
+});
+
 generateBtn.addEventListener('click', buildOutput);
 copyBtn.addEventListener('click', async () => {
   buildOutput();
@@ -736,6 +944,13 @@ clearBtn.addEventListener('click', () => {
   });
   useMarkdownHeadings.checked = true;
   autoGenerate.checked = true;
+  customTheme = {
+    accent: presetThemes.light.accent,
+    bg: presetThemes.light.bg,
+    panel: presetThemes.light.panel,
+    text: presetThemes.light.text
+  };
+  applyTheme('light');
   output.value = '';
   saveState();
 });
@@ -747,6 +962,7 @@ riskFactorsContainer.addEventListener('change', () => {
 
 renderRiskFactors();
 renderCifasOptions();
+applyTheme('light');
 restoreState();
 if (autoGenerate.checked) buildOutput();
 
