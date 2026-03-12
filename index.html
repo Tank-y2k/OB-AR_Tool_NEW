@@ -33,6 +33,11 @@ body {
   overflow: hidden;
 }
 
+select option {
+  color: var(--text);
+  background: var(--field-bg);
+}
+
 .app-shell {
   height: 100vh;
   display: grid;
@@ -342,9 +347,21 @@ select:hover {
 }
 
 @media (max-width: 860px) {
+  body {
+    overflow: auto;
+  }
+
   .app-shell {
     grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100vh;
   }
+
+  .sidebar, .content, .output-panel {
+    height: auto;
+    overflow: visible;
+  }
+
   .grid.two {
     grid-template-columns: 1fr;
   }
@@ -760,18 +777,23 @@ function buildSection(title, lines) {
 
 function buildOutput() {
   const riskFactors = getCheckedValues('riskFactors');
+  const decisionValue = document.getElementById('decision').value;
+  const isDeclineDecision = /decline/i.test(decisionValue);
 
   const summaryLines = [
-    document.getElementById('decision').value && `**Decision:** ${document.getElementById('decision').value}`,
+    decisionValue && `**Decision:** ${decisionValue}`,
     document.getElementById('summary').value && `**Rationale:** ${document.getElementById('summary').value}`,
+    isDeclineDecision && document.getElementById('riskLevel').value && `**Risk Level:** ${document.getElementById('riskLevel').value}`,
   ];
 
-  const businessUnderstandingLines = [
-    document.getElementById('riskLevel').value && `**Risk Level:** ${document.getElementById('riskLevel').value}`,
-    document.getElementById('evidence').value && `**Business Understanding:** ${document.getElementById('evidence').value}`,
-    riskFactors.length ? `**Risk Factors:** ${riskFactors.join('; ')}` : '**Risk Factors:** No additional risk factors identified.',
-    document.getElementById('actionTaken').value && `**Action Taken:** ${document.getElementById('actionTaken').value}`,
-  ];
+  const businessUnderstandingLines = isDeclineDecision
+    ? []
+    : [
+      document.getElementById('riskLevel').value && `**Risk Level:** ${document.getElementById('riskLevel').value}`,
+      document.getElementById('evidence').value && `**Business Understanding:** ${document.getElementById('evidence').value}`,
+      riskFactors.length ? `**Risk Factors:** ${riskFactors.join('; ')}` : '**Risk Factors:** No additional risk factors identified.',
+      document.getElementById('actionTaken').value && `**Action Taken:** ${document.getElementById('actionTaken').value}`,
+    ];
 
   const additionalLines = [
     document.getElementById('rationaleNotes').value && `**Links:** ${document.getElementById('rationaleNotes').value}`,
@@ -780,7 +802,7 @@ function buildOutput() {
 
   const sections = [
     buildSection('Summary of Decision', summaryLines),
-    buildSection('Do you understand the customers nature of business, is it plausible and have you addressed associated risk factors?', businessUnderstandingLines),
+    !isDeclineDecision && buildSection('Do you understand the customers nature of business, is it plausible and have you addressed associated risk factors?', businessUnderstandingLines),
     buildSection('Links/CIFAS', additionalLines)
   ].filter(Boolean);
 
