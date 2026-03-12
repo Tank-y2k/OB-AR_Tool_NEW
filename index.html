@@ -41,23 +41,16 @@ select option {
 .app-shell {
   height: 100vh;
   display: grid;
-  grid-template-columns: 280px minmax(420px, 1fr) 420px;
+  grid-template-columns: minmax(420px, 1fr) 420px;
   gap: 18px;
   padding: 18px;
 }
 
-.sidebar, .content, .output-panel {
+.content, .output-panel {
   background: color-mix(in srgb, var(--panel) 92%, transparent);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-}
-
-.sidebar {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
 }
 
 h1, h2, p { margin-top: 0; }
@@ -65,8 +58,9 @@ h1 { font-size: 1.55rem; margin-bottom: 8px; }
 h1 span { color: var(--accent); }
 .subtitle, .panel-header p, .footer-note, .hint { color: var(--muted); font-size: 0.95rem; }
 
-.tab-list { display: grid; gap: 10px; margin: 22px 0; }
-.tab, .sidebar button, .panel-header button {
+.panel-header button,
+.output-actions button,
+.modal-header button {
   border: 1px solid var(--border);
   background: var(--panel-alt);
   color: var(--text);
@@ -75,19 +69,17 @@ h1 span { color: var(--accent); }
   cursor: pointer;
   transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
-.tab:hover, .sidebar button:hover, .panel-header button:hover { transform: translateY(-1px); border-color: var(--accent); }
-.tab.active { background: color-mix(in srgb, var(--accent) 14%, transparent); border-color: var(--accent); }
+.panel-header button:hover,
+.output-actions button:hover,
+.modal-header button:hover { transform: translateY(-1px); border-color: var(--accent); }
 .primary { border-color: var(--accent) !important; background: color-mix(in srgb, var(--accent) 18%, transparent) !important; }
 .danger { background: rgba(255, 125, 125, 0.14) !important; border-color: rgba(255, 125, 125, 0.35) !important; }
 
-.sidebar-actions { display: grid; gap: 10px; }
 .content, .output-panel { padding: 22px; }
 .output-panel {
   display: flex;
   flex-direction: column;
 }
-.panel { display: none; }
-.panel.active { display: block; }
 .panel-header { margin-bottom: 18px; }
 .panel-header.split {
   display: flex;
@@ -105,6 +97,53 @@ h1 span { color: var(--accent); }
   justify-content: center;
   font-size: 1.1rem;
   line-height: 1;
+}
+
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 19, 34, 0.42);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 20;
+}
+
+.settings-modal.open {
+  display: flex;
+}
+
+.settings-modal-card {
+  width: min(900px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--panel) 96%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.output-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .settings-danger-row {
@@ -332,9 +371,9 @@ select:hover {
 }
 
 @media (min-width: 1301px) {
-  .sidebar, .content, .output-panel { height: calc(100vh - 36px); }
+  .content, .output-panel { height: calc(100vh - 36px); }
   .content { overflow-y: auto; }
-  .sidebar, .output-panel { overflow: hidden; }
+  .output-panel { overflow: hidden; }
 }
 
 @media (max-width: 1300px) {
@@ -343,21 +382,17 @@ select:hover {
   }
 
   .app-shell {
-    grid-template-columns: 250px 1fr;
+    grid-template-columns: 1fr;
     height: auto;
     min-height: 100vh;
   }
 
-  .sidebar,
   .content,
   .output-panel {
     height: auto;
     overflow: visible;
   }
 
-  .output-panel {
-    grid-column: 1 / -1;
-  }
 }
 
 @media (max-width: 860px) {
@@ -371,12 +406,16 @@ select:hover {
     min-height: 100vh;
   }
 
-  .sidebar, .content, .output-panel {
+  .content, .output-panel {
     height: auto;
     overflow: visible;
   }
 
   .grid.two {
+    grid-template-columns: 1fr;
+  }
+
+  .output-actions {
     grid-template-columns: 1fr;
   }
 }
@@ -385,32 +424,19 @@ select:hover {
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
-      <div>
-        <h1>Rationale <span>Builder</span></h1>
-        <p class="subtitle">Structured notes builder focused on rationale output.</p>
-      </div>
-
-      <nav class="tab-list" aria-label="Main sections">
-        <button class="tab active" data-tab="rationale">Rationale</button>
-        <button class="tab" data-tab="settings">Settings</button>
-      </nav>
-
-      <div class="sidebar-actions">
-        <button id="generateBtn" class="primary">Generate Output</button>
-        <button id="copyBtn">Copy Output</button>
-        <button id="clearBtn" class="danger">Clear Form</button>
-      </div>
-    </aside>
-
     <main class="content">
-      <section class="panel active" id="panel-rationale">
+      <section>
         <div class="panel-header split">
           <div>
+            <h1>Rationale <span>Builder</span></h1>
+            <p class="subtitle">Structured notes builder focused on rationale output.</p>
             <h2>Rationale</h2>
             <p>Build the main decision summary with consistent structure.</p>
           </div>
-          <button id="editDefaultsBtn" type="button" class="icon-btn" title="Save current rationale values as Clear Form defaults" aria-label="Save current rationale values as Clear Form defaults">💾</button>
+          <div class="header-actions">
+            <button id="toggleSettingsBtn" type="button" class="icon-btn" title="Open settings" aria-label="Open settings">⚙️</button>
+            <button id="editDefaultsBtn" type="button" class="icon-btn" title="Save current rationale values as Clear Form defaults" aria-label="Save current rationale values as Clear Form defaults">💾</button>
+          </div>
         </div>
 
         <div class="grid two">
@@ -479,14 +505,35 @@ select:hover {
           </select>
         </label>
       </section>
+    </main>
 
-      <section class="panel" id="panel-settings">
-        <div class="panel-header">
-          <h2>Settings</h2>
+    <aside class="output-panel">
+      <div class="panel-header">
+        <h2>Output Preview</h2>
+        <p>Ready to copy into your workflow. Markdown formatting is rendered below.</p>
+      </div>
+      <textarea id="output" class="hidden" aria-hidden="true" tabindex="-1"></textarea>
+      <div id="outputPreview" class="preview-shell" aria-live="polite"></div>
+      <div class="output-actions">
+        <button id="generateBtn" class="primary">Generate Output</button>
+        <button id="copyBtn">Copy Output</button>
+        <button id="clearBtn" class="danger">Clear Form</button>
+      </div>
+      <div class="footer-note">Preferences and risk factors are saved locally in your browser.</div>
+    </aside>
+  </div>
+
+  <div id="settingsModal" class="settings-modal" aria-hidden="true">
+    <section class="settings-modal-card" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+      <div class="modal-header">
+        <div>
+          <h2 id="settingsModalTitle">Settings</h2>
           <p>Control layout behaviour and manage risk factors.</p>
         </div>
+        <button id="closeSettingsBtn" type="button" class="icon-btn" title="Close settings" aria-label="Close settings">✕</button>
+      </div>
 
-        <div class="settings-list">
+      <div class="settings-list">
           <details class="settings-group" open>
             <summary>Format</summary>
             <div class="settings-group-content">
@@ -591,18 +638,7 @@ select:hover {
             </div>
           </details>
         </div>
-      </section>
-    </main>
-
-    <aside class="output-panel">
-      <div class="panel-header">
-        <h2>Output Preview</h2>
-        <p>Ready to copy into your workflow. Markdown formatting is rendered below.</p>
-      </div>
-      <textarea id="output" class="hidden" aria-hidden="true" tabindex="-1"></textarea>
-      <div id="outputPreview" class="preview-shell" aria-live="polite"></div>
-      <div class="footer-note">Preferences and risk factors are saved locally in your browser.</div>
-    </aside>
+    </section>
   </div>
 
   <!-- <script src="app.js"></script> -->
@@ -648,14 +684,15 @@ const presetThemes = {
   }
 };
 
-const tabs = document.querySelectorAll('.tab');
-const panels = document.querySelectorAll('.panel');
 const output = document.getElementById('output');
 const generateBtn = document.getElementById('generateBtn');
 const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
 const hardResetBtn = document.getElementById('hardResetBtn');
 const editDefaultsBtn = document.getElementById('editDefaultsBtn');
+const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const settingsModal = document.getElementById('settingsModal');
 const autoGenerate = document.getElementById('autoGenerate');
 const includeEmptySections = document.getElementById('includeEmptySections');
 const useMarkdownHeadings = document.getElementById('useMarkdownHeadings');
@@ -767,12 +804,10 @@ function syncCustomThemeFromInputs() {
   };
 }
 
-function tabTo(panelName) {
-  tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === panelName));
-  panels.forEach(panel => panel.classList.toggle('active', panel.id === `panel-${panelName}`));
+function setSettingsModalOpen(isOpen) {
+  settingsModal.classList.toggle('open', isOpen);
+  settingsModal.setAttribute('aria-hidden', String(!isOpen));
 }
-
-tabs.forEach(tab => tab.addEventListener('click', () => tabTo(tab.dataset.tab)));
 
 function getCheckedValues(containerId) {
   return [...document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`)].map(i => i.value);
@@ -1103,6 +1138,26 @@ function escapeHtml(str) {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 }
+
+toggleSettingsBtn.addEventListener('click', () => {
+  setSettingsModalOpen(true);
+});
+
+closeSettingsBtn.addEventListener('click', () => {
+  setSettingsModalOpen(false);
+});
+
+settingsModal.addEventListener('click', event => {
+  if (event.target === settingsModal) {
+    setSettingsModalOpen(false);
+  }
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && settingsModal.classList.contains('open')) {
+    setSettingsModalOpen(false);
+  }
+});
 
 autoGenerate.addEventListener('change', () => {
   syncGenerateButtonVisibility();
