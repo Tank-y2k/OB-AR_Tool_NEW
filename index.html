@@ -379,7 +379,7 @@ select:hover {
             <h2>Rationale</h2>
             <p>Build the main decision summary with consistent structure.</p>
           </div>
-          <button id="editDefaultsBtn" type="button" class="icon-btn" title="Save current text boxes as Clear Form defaults" aria-label="Save current text boxes as Clear Form defaults">✎</button>
+          <button id="editDefaultsBtn" type="button" class="icon-btn" title="Save current rationale values as Clear Form defaults" aria-label="Save current rationale values as Clear Form defaults">💾</button>
         </div>
 
         <div class="grid two">
@@ -660,10 +660,14 @@ let customTheme = {
 };
 
 const defaultClearFormText = {
+  decision: '',
+  riskLevel: '',
   summary: '',
   evidence: '',
   actionTaken: '',
-  rationaleNotes: ''
+  rationaleNotes: '',
+  cifasCheck: '',
+  enabledRiskFactors: [...defaultRiskFactors]
 };
 
 let clearFormTextDefaults = { ...defaultClearFormText };
@@ -1158,15 +1162,16 @@ copyBtn.addEventListener('click', async () => {
 clearBtn.addEventListener('click', () => {
   if (!confirm('Clear all fields and reset the preview?')) return;
 
-  document.getElementById('decision').selectedIndex = 0;
-  document.getElementById('riskLevel').selectedIndex = 0;
+  document.getElementById('decision').value = clearFormTextDefaults.decision;
+  document.getElementById('riskLevel').value = clearFormTextDefaults.riskLevel;
   document.getElementById('summary').value = clearFormTextDefaults.summary;
   document.getElementById('evidence').value = clearFormTextDefaults.evidence;
   document.getElementById('actionTaken').value = clearFormTextDefaults.actionTaken;
   document.getElementById('rationaleNotes').value = clearFormTextDefaults.rationaleNotes;
-  document.getElementById('cifasCheck').value = '';
+  document.getElementById('cifasCheck').value = clearFormTextDefaults.cifasCheck;
+  const enabledRiskFactors = new Set(clearFormTextDefaults.enabledRiskFactors || []);
   [...document.querySelectorAll('#riskFactors input[type="checkbox"]')].forEach(cb => {
-    cb.checked = true;
+    cb.checked = enabledRiskFactors.has(cb.value);
   });
 
   output.value = '';
@@ -1177,14 +1182,18 @@ clearBtn.addEventListener('click', () => {
 
 editDefaultsBtn.addEventListener('click', () => {
   clearFormTextDefaults = {
+    decision: document.getElementById('decision').value,
+    riskLevel: document.getElementById('riskLevel').value,
     summary: document.getElementById('summary').value,
     evidence: document.getElementById('evidence').value,
     actionTaken: document.getElementById('actionTaken').value,
-    rationaleNotes: document.getElementById('rationaleNotes').value
+    rationaleNotes: document.getElementById('rationaleNotes').value,
+    cifasCheck: document.getElementById('cifasCheck').value,
+    enabledRiskFactors: getCheckedValues('riskFactors')
   };
   editDefaultsBtn.textContent = '✓';
   setTimeout(() => {
-    editDefaultsBtn.textContent = '✎';
+    editDefaultsBtn.textContent = '💾';
   }, 1000);
   saveState();
 });
