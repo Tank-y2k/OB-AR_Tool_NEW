@@ -91,6 +91,22 @@ h1 span { color: var(--accent); }
   gap: 16px;
 }
 
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.settings-danger-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .grid { display: grid; gap: 14px; margin-bottom: 14px; }
 .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 label { display: block; margin-bottom: 14px; }
@@ -358,9 +374,12 @@ select:hover {
 
     <main class="content">
       <section class="panel active" id="panel-rationale">
-        <div class="panel-header">
-          <h2>Rationale</h2>
-          <p>Build the main decision summary with consistent structure.</p>
+        <div class="panel-header split">
+          <div>
+            <h2>Rationale</h2>
+            <p>Build the main decision summary with consistent structure.</p>
+          </div>
+          <button id="editDefaultsBtn" type="button" class="icon-btn" title="Save current text boxes as Clear Form defaults" aria-label="Save current text boxes as Clear Form defaults">✎</button>
         </div>
 
         <div class="grid two">
@@ -500,6 +519,10 @@ select:hover {
                   </label>
                 </div>
               </div>
+
+              <div class="switch-row settings-danger-row">
+                <button type="button" id="hardResetBtn" class="danger">Hard Reset All Customisations</button>
+              </div>
             </div>
           </details>
 
@@ -600,6 +623,8 @@ const output = document.getElementById('output');
 const generateBtn = document.getElementById('generateBtn');
 const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
+const hardResetBtn = document.getElementById('hardResetBtn');
+const editDefaultsBtn = document.getElementById('editDefaultsBtn');
 const autoGenerate = document.getElementById('autoGenerate');
 const includeEmptySections = document.getElementById('includeEmptySections');
 const useMarkdownHeadings = document.getElementById('useMarkdownHeadings');
@@ -633,6 +658,15 @@ let customTheme = {
   fieldBg: presetThemes.light.fieldBg,
   text: presetThemes.light.text
 };
+
+const defaultClearFormText = {
+  summary: '',
+  evidence: '',
+  actionTaken: '',
+  rationaleNotes: ''
+};
+
+let clearFormTextDefaults = { ...defaultClearFormText };
 
 const formIds = [
   'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes', 'cifasCheck',
@@ -833,6 +867,7 @@ function saveState() {
   state.riskFactorOptions = riskFactorOptions;
   state.cifasOptions = cifasOptions;
   state.theme = { mode: activeThemeMode, custom: customTheme };
+  state.clearFormTextDefaults = clearFormTextDefaults;
   state.output = output.value;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
@@ -860,6 +895,14 @@ function restoreState() {
     if (state.theme?.custom) {
       customTheme = { ...customTheme, ...state.theme.custom };
     }
+
+    if (state.clearFormTextDefaults) {
+      clearFormTextDefaults = {
+        ...defaultClearFormText,
+        ...state.clearFormTextDefaults
+      };
+    }
+
     applyTheme(state.theme?.mode || 'light');
 
     const savedRiskFactors = Array.isArray(state.riskFactors) ? state.riskFactors : null;
@@ -1114,22 +1157,63 @@ copyBtn.addEventListener('click', async () => {
 
 clearBtn.addEventListener('click', () => {
   if (!confirm('Clear all fields and reset the preview?')) return;
+
+  document.getElementById('decision').selectedIndex = 0;
+  document.getElementById('riskLevel').selectedIndex = 0;
+  document.getElementById('summary').value = clearFormTextDefaults.summary;
+  document.getElementById('evidence').value = clearFormTextDefaults.evidence;
+  document.getElementById('actionTaken').value = clearFormTextDefaults.actionTaken;
+  document.getElementById('rationaleNotes').value = clearFormTextDefaults.rationaleNotes;
+  document.getElementById('cifasCheck').value = '';
+  [...document.querySelectorAll('#riskFactors input[type="checkbox"]')].forEach(cb => {
+    cb.checked = true;
+  });
+
+  output.value = '';
+  renderOutputPreview('');
+  if (autoGenerate.checked) buildOutput();
+  saveState();
+});
+
+editDefaultsBtn.addEventListener('click', () => {
+  clearFormTextDefaults = {
+    summary: document.getElementById('summary').value,
+    evidence: document.getElementById('evidence').value,
+    actionTaken: document.getElementById('actionTaken').value,
+    rationaleNotes: document.getElementById('rationaleNotes').value
+  };
+  editDefaultsBtn.textContent = '✓';
+  setTimeout(() => {
+    editDefaultsBtn.textContent = '✎';
+  }, 1000);
+  saveState();
+});
+
+hardResetBtn.addEventListener('click', () => {
+  if (!confirm('Hard reset all customisations and defaults back to original values?')) return;
+
   localStorage.removeItem(STORAGE_KEY);
   riskFactorOptions = [...defaultRiskFactors];
   cifasOptions = [...defaultCifasOptions];
+  clearFormTextDefaults = { ...defaultClearFormText };
+
   renderRiskFactors();
   renderCifasOptions();
+
   [...document.querySelectorAll('input, textarea, select')].forEach(el => {
     if (el.type === 'checkbox') el.checked = false;
     else if (el.tagName === 'SELECT') el.selectedIndex = 0;
     else el.value = '';
   });
+
   [...document.querySelectorAll('#riskFactors input[type="checkbox"]')].forEach(cb => {
     cb.checked = true;
   });
+
   useMarkdownHeadings.checked = true;
   autoGenerate.checked = true;
   syncGenerateButtonVisibility();
+
   customTheme = {
     accent: presetThemes.light.accent,
     bg: presetThemes.light.bg,
@@ -1138,6 +1222,7 @@ clearBtn.addEventListener('click', () => {
     text: presetThemes.light.text
   };
   applyTheme('light');
+
   output.value = '';
   renderOutputPreview('');
   saveState();
