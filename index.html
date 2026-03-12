@@ -105,6 +105,34 @@ h1 span { color: var(--accent); }
   gap: 8px;
 }
 
+.macro-toolbar {
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-alt);
+}
+
+.macro-toolbar-title {
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+.macro-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.macro-chip {
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
 .settings-modal {
   position: fixed;
   inset: 0;
@@ -436,7 +464,13 @@ select:hover {
           <div class="header-actions">
             <button id="toggleSettingsBtn" type="button" class="icon-btn" title="Open settings" aria-label="Open settings">⚙️</button>
             <button id="editDefaultsBtn" type="button" class="icon-btn" title="Save current rationale values as Clear Form defaults" aria-label="Save current rationale values as Clear Form defaults">💾</button>
+            <button id="toggleMacrosBtn" type="button" class="icon-btn" title="Toggle custom macros" aria-label="Toggle custom macros">🧩</button>
           </div>
+        </div>
+
+        <div id="macroToolbar" class="macro-toolbar hidden">
+          <p class="macro-toolbar-title">Custom Macros (click to insert into the active text box)</p>
+          <div id="macroChipGrid" class="macro-chip-grid"></div>
         </div>
 
         <div class="grid two">
@@ -637,6 +671,23 @@ select:hover {
               </div>
             </div>
           </details>
+
+          <details class="settings-group" open>
+            <summary>Macros</summary>
+            <div class="settings-group-content">
+              <div class="switch-row" style="display:block;">
+                <div style="margin-bottom:12px;">
+                  <strong>Custom macros</strong>
+                  <p>Add, edit, and remove predefined statements for quick insertion into text fields.</p>
+                </div>
+                <div class="settings-inline">
+                  <input type="text" id="newMacro" placeholder="Add new macro statement" />
+                  <button type="button" id="addMacroBtn">Add</button>
+                </div>
+                <div id="macroManager" class="settings-list" style="margin-top:12px;"></div>
+              </div>
+            </div>
+          </details>
         </div>
     </section>
   </div>
@@ -656,6 +707,10 @@ const defaultRiskFactors = [
 ];
 
 const defaultCifasOptions = ['CIFAS checked', 'No check required', 'N/A'];
+const defaultMacros = [
+  'Legitimacy of business plausible.',
+  'Further comfort gained from supporting evidence.'
+];
 
 const presetThemes = {
   light: {
@@ -692,7 +747,10 @@ const hardResetBtn = document.getElementById('hardResetBtn');
 const editDefaultsBtn = document.getElementById('editDefaultsBtn');
 const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
 const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const toggleMacrosBtn = document.getElementById('toggleMacrosBtn');
 const settingsModal = document.getElementById('settingsModal');
+const macroToolbar = document.getElementById('macroToolbar');
+const macroChipGrid = document.getElementById('macroChipGrid');
 const autoGenerate = document.getElementById('autoGenerate');
 const includeEmptySections = document.getElementById('includeEmptySections');
 const useMarkdownHeadings = document.getElementById('useMarkdownHeadings');
@@ -704,6 +762,9 @@ const cifasCheck = document.getElementById('cifasCheck');
 const newCifasOption = document.getElementById('newCifasOption');
 const addCifasOptionBtn = document.getElementById('addCifasOptionBtn');
 const cifasOptionManager = document.getElementById('cifasOptionManager');
+const newMacro = document.getElementById('newMacro');
+const addMacroBtn = document.getElementById('addMacroBtn');
+const macroManager = document.getElementById('macroManager');
 const themeMode = document.getElementById('themeMode');
 const accentColor = document.getElementById('accentColor');
 const bgColor = document.getElementById('bgColor');
@@ -718,6 +779,8 @@ function syncGenerateButtonVisibility() {
 
 let riskFactorOptions = [...defaultRiskFactors];
 let cifasOptions = [...defaultCifasOptions];
+let macroOptions = [...defaultMacros];
+let lastFocusedTextField = null;
 let activeThemeMode = 'light';
 let customTheme = {
   accent: presetThemes.light.accent,
@@ -941,6 +1004,7 @@ function saveState() {
   state.riskFactors = getCheckedValues('riskFactors');
   state.riskFactorOptions = riskFactorOptions;
   state.cifasOptions = cifasOptions;
+  state.macroOptions = macroOptions;
   state.theme = { mode: activeThemeMode, custom: customTheme };
   state.clearFormTextDefaults = clearFormTextDefaults;
   state.output = output.value;
@@ -967,6 +1031,10 @@ function restoreState() {
       cifasOptions = [...state.cifasOptions];
     }
 
+    if (Array.isArray(state.macroOptions)) {
+      macroOptions = [...state.macroOptions];
+    }
+
     if (state.theme?.custom) {
       customTheme = { ...customTheme, ...state.theme.custom };
     }
@@ -983,6 +1051,7 @@ function restoreState() {
     const savedRiskFactors = Array.isArray(state.riskFactors) ? state.riskFactors : null;
     renderRiskFactors(savedRiskFactors);
     renderCifasOptions(state.cifasCheck || '');
+    renderMacros();
 
     output.value = state.output || '';
     renderOutputPreview(output.value);
@@ -1130,6 +1199,90 @@ function renderCifasOptions(selectedValue = '') {
   cifasCheck.value = cifasOptions.includes(activeValue) ? activeValue : '';
 }
 
+function renderMacros() {
+  macroChipGrid.innerHTML = '';
+  macroManager.innerHTML = '';
+
+  macroOptions.forEach(macro => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'macro-chip';
+    chip.textContent = macro;
+    chip.addEventListener('click', () => {
+      insertMacroIntoActiveField(macro);
+    });
+    macroChipGrid.appendChild(chip);
+
+    const managerItem = document.createElement('div');
+    managerItem.className = 'risk-factor-item';
+
+    const macroInput = document.createElement('input');
+    macroInput.type = 'text';
+    macroInput.value = macro;
+    macroInput.className = 'entry-text';
+    macroInput.setAttribute('aria-label', `Edit macro ${macro}`);
+    managerItem.appendChild(macroInput);
+
+    const actions = document.createElement('div');
+    actions.className = 'settings-item-actions';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.textContent = 'Save';
+    saveBtn.addEventListener('click', () => {
+      const nextValue = macroInput.value.trim();
+      if (!nextValue) {
+        macroInput.value = macro;
+        return;
+      }
+      if (nextValue !== macro && macroOptions.includes(nextValue)) {
+        macroInput.value = macro;
+        return;
+      }
+      macroOptions = macroOptions.map(item => (item === macro ? nextValue : item));
+      renderMacros();
+      if (autoGenerate.checked) buildOutput();
+      else saveState();
+    });
+    actions.appendChild(saveBtn);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = 'Remove';
+    removeBtn.classList.add('btn-danger');
+    removeBtn.addEventListener('click', () => {
+      macroOptions = macroOptions.filter(item => item !== macro);
+      renderMacros();
+      if (autoGenerate.checked) buildOutput();
+      else saveState();
+    });
+    actions.appendChild(removeBtn);
+
+    managerItem.appendChild(actions);
+    macroManager.appendChild(managerItem);
+  });
+}
+
+function insertMacroIntoActiveField(macroText) {
+  if (!(lastFocusedTextField instanceof HTMLTextAreaElement) && !(lastFocusedTextField instanceof HTMLInputElement)) {
+    return;
+  }
+
+  const field = lastFocusedTextField;
+  const start = field.selectionStart ?? field.value.length;
+  const end = field.selectionEnd ?? field.value.length;
+  const before = field.value.slice(0, start);
+  const after = field.value.slice(end);
+  const separator = before && !before.endsWith(' ') && !before.endsWith('\n') ? ' ' : '';
+  field.value = `${before}${separator}${macroText}${after}`;
+  const cursorPos = (before + separator + macroText).length;
+  field.setSelectionRange(cursorPos, cursorPos);
+  field.focus();
+
+  if (autoGenerate.checked) buildOutput();
+  else saveState();
+}
+
 function escapeHtml(str) {
   return str
     .replaceAll('&', '&amp;')
@@ -1179,6 +1332,16 @@ autoGenerate.addEventListener('change', () => {
   });
 });
 
+[...document.querySelectorAll('textarea, input[type="text"]')].forEach(el => {
+  el.addEventListener('focus', () => {
+    lastFocusedTextField = el;
+  });
+});
+
+toggleMacrosBtn.addEventListener('click', () => {
+  macroToolbar.classList.toggle('hidden');
+});
+
 addRiskFactorBtn.addEventListener('click', () => {
   const value = newRiskFactor.value.trim();
   if (!value) return;
@@ -1207,6 +1370,20 @@ addCifasOptionBtn.addEventListener('click', () => {
   else saveState();
 });
 
+addMacroBtn.addEventListener('click', () => {
+  const value = newMacro.value.trim();
+  if (!value) return;
+  if (macroOptions.includes(value)) {
+    newMacro.value = '';
+    return;
+  }
+  macroOptions.push(value);
+  newMacro.value = '';
+  renderMacros();
+  if (autoGenerate.checked) buildOutput();
+  else saveState();
+});
+
 newRiskFactor.addEventListener('keydown', event => {
   if (event.key === 'Enter') {
     event.preventDefault();
@@ -1218,6 +1395,13 @@ newCifasOption.addEventListener('keydown', event => {
   if (event.key === 'Enter') {
     event.preventDefault();
     addCifasOptionBtn.click();
+  }
+});
+
+newMacro.addEventListener('keydown', event => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    addMacroBtn.click();
   }
 });
 
@@ -1295,10 +1479,12 @@ hardResetBtn.addEventListener('click', () => {
   localStorage.removeItem(STORAGE_KEY);
   riskFactorOptions = [...defaultRiskFactors];
   cifasOptions = [...defaultCifasOptions];
+  macroOptions = [...defaultMacros];
   clearFormTextDefaults = { ...defaultClearFormText };
 
   renderRiskFactors();
   renderCifasOptions();
+  renderMacros();
 
   [...document.querySelectorAll('input, textarea, select')].forEach(el => {
     if (el.type === 'checkbox') el.checked = false;
@@ -1335,6 +1521,7 @@ riskFactorsContainer.addEventListener('change', () => {
 
 renderRiskFactors();
 renderCifasOptions();
+renderMacros();
 applyTheme('light');
 restoreState();
 syncGenerateButtonVisibility();
