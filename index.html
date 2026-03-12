@@ -30,10 +30,11 @@ body {
   font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
   color: var(--text);
+  overflow: hidden;
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
   grid-template-columns: 280px minmax(420px, 1fr) 420px;
   gap: 18px;
@@ -70,8 +71,8 @@ h1 span { color: var(--accent); }
   transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 .tab:hover, .sidebar button:hover, .panel-header button:hover { transform: translateY(-1px); border-color: var(--accent); }
-.tab.active { background: rgba(124, 196, 255, 0.12); border-color: var(--accent); }
-.primary { background: rgba(124, 196, 255, 0.16) !important; }
+.tab.active { background: color-mix(in srgb, var(--accent) 14%, transparent); border-color: var(--accent); }
+.primary { border-color: var(--accent) !important; background: color-mix(in srgb, var(--accent) 18%, transparent) !important; }
 .danger { background: rgba(255, 125, 125, 0.14) !important; border-color: rgba(255, 125, 125, 0.35) !important; }
 
 .sidebar-actions { display: grid; gap: 10px; }
@@ -104,9 +105,12 @@ input, select, textarea {
   border-radius: 12px;
   font: inherit;
 }
+input[type="checkbox"] {
+  accent-color: var(--accent);
+}
 textarea { resize: vertical; min-height: 100px; }
 input:focus, select:focus, textarea:focus, button:focus {
-  outline: 2px solid rgba(124, 196, 255, 0.35);
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
   outline-offset: 2px;
 }
 
@@ -162,12 +166,29 @@ input:focus, select:focus, textarea:focus, button:focus {
 }
 
 .risk-factor-item button {
-  border: 1px solid rgba(255, 125, 125, 0.35);
-  background: rgba(255, 125, 125, 0.14);
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
   color: var(--text);
   border-radius: 10px;
   padding: 6px 10px;
   cursor: pointer;
+}
+
+.risk-factor-item button.btn-danger {
+  border-color: rgba(255, 125, 125, 0.35);
+  background: rgba(255, 125, 125, 0.14);
+}
+
+.settings-inline button,
+#copyBtn,
+#generateBtn {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+select:focus,
+select:hover {
+  border-color: var(--accent);
 }
 
 .settings-list { display: grid; gap: 14px; }
@@ -226,6 +247,12 @@ input:focus, select:focus, textarea:focus, button:focus {
   min-height: 70vh;
   font-family: Consolas, Menlo, Monaco, monospace;
   line-height: 1.5;
+}
+
+@media (min-width: 1301px) {
+  .sidebar, .content, .output-panel { height: calc(100vh - 36px); }
+  .content { overflow-y: auto; }
+  .sidebar, .output-panel { overflow: hidden; }
 }
 
 @media (max-width: 1300px) {
@@ -765,6 +792,7 @@ function renderRiskFactors(checkedValues = null) {
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.textContent = 'Remove';
+    removeBtn.classList.add('btn-danger');
     removeBtn.addEventListener('click', () => {
       riskFactorOptions = riskFactorOptions.filter(item => item !== factor);
       renderRiskFactors();
@@ -826,6 +854,7 @@ function renderCifasOptions(selectedValue = '') {
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.textContent = 'Remove';
+    removeBtn.classList.add('btn-danger');
     removeBtn.addEventListener('click', () => {
       const currentValue = cifasCheck.value;
       cifasOptions = cifasOptions.filter(item => item !== option);
