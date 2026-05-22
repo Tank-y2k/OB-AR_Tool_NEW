@@ -541,6 +541,18 @@ select:hover {
             <option value="N/A">N/A</option>
           </select>
         </label>
+
+        <label>
+          <span>App Complete Outcome</span>
+          <select id="appCompleteOutcome">
+            <option value="">Select an outcome</option>
+            <option value="Approve">Approve</option>
+            <option value="Decline">Decline</option>
+            <option value="Resubmit">Resubmit</option>
+            <option value="Refer to ORE">Refer to ORE</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
       </section>
     </main>
 
@@ -802,13 +814,14 @@ const defaultClearFormText = {
   actionTaken: '',
   rationaleNotes: '',
   cifasCheck: '',
+  appCompleteOutcome: '',
   enabledRiskFactors: [...defaultRiskFactors]
 };
 
 let clearFormTextDefaults = { ...defaultClearFormText };
 
 const formIds = [
-  'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes', 'cifasCheck',
+  'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes', 'cifasCheck', 'appCompleteOutcome',
   'includeEmptySections', 'useMarkdownHeadings', 'autoGenerate',
   'themeMode', 'accentColor', 'bgColor', 'panelColor', 'textboxColor', 'textColor'
 ];
@@ -945,6 +958,7 @@ function buildOutput() {
   const additionalLines = [
     document.getElementById('rationaleNotes').value && `**Links:** ${document.getElementById('rationaleNotes').value}`,
     document.getElementById('cifasCheck').value && `**CIFAS Check:** ${document.getElementById('cifasCheck').value}`,
+    document.getElementById('appCompleteOutcome').value && `**App Complete Outcome:** ${document.getElementById('appCompleteOutcome').value}`,
   ];
 
   const sections = [
@@ -1483,6 +1497,7 @@ clearBtn.addEventListener('click', () => {
   document.getElementById('actionTaken').value = clearFormTextDefaults.actionTaken;
   document.getElementById('rationaleNotes').value = clearFormTextDefaults.rationaleNotes;
   document.getElementById('cifasCheck').value = clearFormTextDefaults.cifasCheck;
+  document.getElementById('appCompleteOutcome').value = clearFormTextDefaults.appCompleteOutcome;
   const enabledRiskFactors = new Set(clearFormTextDefaults.enabledRiskFactors || []);
   [...document.querySelectorAll('#riskFactors input[type="checkbox"]')].forEach(cb => {
     cb.checked = enabledRiskFactors.has(cb.value);
@@ -1503,6 +1518,7 @@ editDefaultsBtn.addEventListener('click', () => {
     actionTaken: document.getElementById('actionTaken').value,
     rationaleNotes: document.getElementById('rationaleNotes').value,
     cifasCheck: document.getElementById('cifasCheck').value,
+    appCompleteOutcome: document.getElementById('appCompleteOutcome').value,
     enabledRiskFactors: getCheckedValues('riskFactors')
   };
   editDefaultsBtn.textContent = '✓';
