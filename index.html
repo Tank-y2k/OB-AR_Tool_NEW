@@ -541,6 +541,11 @@ select:hover {
             <option value="N/A">N/A</option>
           </select>
         </label>
+
+        <label>
+          <span>FACTA/CRS Check</span>
+          <textarea id="factaCrsCheck" rows="3" placeholder="Add FACTA/CRS check details to append at the end of the rationale."></textarea>
+        </label>
       </section>
     </main>
 
@@ -802,13 +807,14 @@ const defaultClearFormText = {
   actionTaken: '',
   rationaleNotes: '',
   cifasCheck: '',
+  factaCrsCheck: '',
   enabledRiskFactors: [...defaultRiskFactors]
 };
 
 let clearFormTextDefaults = { ...defaultClearFormText };
 
 const formIds = [
-  'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes', 'cifasCheck',
+  'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes', 'cifasCheck', 'factaCrsCheck',
   'includeEmptySections', 'useMarkdownHeadings', 'autoGenerate',
   'themeMode', 'accentColor', 'bgColor', 'panelColor', 'textboxColor', 'textColor'
 ];
@@ -945,6 +951,7 @@ function buildOutput() {
   const additionalLines = [
     document.getElementById('rationaleNotes').value && `**Links:** ${document.getElementById('rationaleNotes').value}`,
     document.getElementById('cifasCheck').value && `**CIFAS Check:** ${document.getElementById('cifasCheck').value}`,
+    document.getElementById('factaCrsCheck').value && `**FACTA/CRS Check:** ${document.getElementById('factaCrsCheck').value}`,
   ];
 
   const sections = [
@@ -1483,6 +1490,7 @@ clearBtn.addEventListener('click', () => {
   document.getElementById('actionTaken').value = clearFormTextDefaults.actionTaken;
   document.getElementById('rationaleNotes').value = clearFormTextDefaults.rationaleNotes;
   document.getElementById('cifasCheck').value = clearFormTextDefaults.cifasCheck;
+  document.getElementById('factaCrsCheck').value = clearFormTextDefaults.factaCrsCheck;
   const enabledRiskFactors = new Set(clearFormTextDefaults.enabledRiskFactors || []);
   [...document.querySelectorAll('#riskFactors input[type="checkbox"]')].forEach(cb => {
     cb.checked = enabledRiskFactors.has(cb.value);
@@ -1503,6 +1511,7 @@ editDefaultsBtn.addEventListener('click', () => {
     actionTaken: document.getElementById('actionTaken').value,
     rationaleNotes: document.getElementById('rationaleNotes').value,
     cifasCheck: document.getElementById('cifasCheck').value,
+    factaCrsCheck: document.getElementById('factaCrsCheck').value,
     enabledRiskFactors: getCheckedValues('riskFactors')
   };
   editDefaultsBtn.textContent = '✓';
