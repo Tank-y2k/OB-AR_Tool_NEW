@@ -41,7 +41,7 @@ select option {
 .app-shell {
   height: 100vh;
   display: grid;
-  grid-template-columns: minmax(420px, 1fr) 420px;
+  grid-template-columns: minmax(440px, 1fr) minmax(520px, 0.9fr);
   gap: 18px;
   padding: 18px;
 }
@@ -355,6 +355,109 @@ select:hover {
   flex: 1;
 }
 
+.performance-builder {
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.section-heading h2 { margin-bottom: 5px; }
+.section-heading p { margin: 0; color: var(--muted); font-size: .9rem; }
+
+.text-button {
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--field-bg));
+  color: var(--accent);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.activity-list { display: grid; gap: 10px; }
+.activity-row {
+  display: grid;
+  grid-template-columns: minmax(145px, 1.5fr) minmax(100px, .8fr) minmax(82px, .65fr) minmax(75px, .55fr) 36px;
+  gap: 8px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--field-bg);
+}
+.activity-row label { margin: 0; }
+.activity-row label span { margin-bottom: 5px; font-size: .75rem; color: var(--muted); }
+.activity-row input { padding: 9px 10px; border-radius: 9px; }
+.remove-activity {
+  width: 36px;
+  height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.performance-card {
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--panel) 94%, white), var(--field-bg));
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(29, 45, 72, .08);
+}
+.performance-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.performance-card-header h3 { margin: 0 0 3px; font-size: 1rem; }
+.performance-card-header p { margin: 0; color: var(--muted); font-size: .78rem; }
+.performance-badge {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success);
+  font-size: .75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.performance-badge.below { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.metric { padding: 12px; background: var(--panel); }
+.metric span { display: block; color: var(--muted); font-size: .67rem; text-transform: uppercase; letter-spacing: .06em; }
+.metric strong { display: block; margin-top: 4px; font-size: 1rem; }
+.performance-table-wrap { overflow-x: auto; }
+.performance-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+.performance-table th { padding: 9px 10px; text-align: right; color: var(--muted); font-size: .66rem; text-transform: uppercase; letter-spacing: .04em; background: var(--panel-alt); }
+.performance-table th:first-child, .performance-table td:first-child { text-align: left; }
+.performance-table td { padding: 10px; text-align: right; border-top: 1px solid var(--border); white-space: nowrap; }
+.performance-table tfoot td { background: var(--panel-alt); font-weight: 800; }
+.queue-name { display: flex; align-items: center; gap: 7px; font-weight: 700; }
+.queue-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.efficiency-good { color: var(--success); font-weight: 800; }
+.efficiency-low { color: var(--danger); font-weight: 800; }
+.empty-performance { padding: 28px 18px; text-align: center; color: var(--muted); }
+.output-section-label { margin: 18px 0 8px; color: var(--muted); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+
 .preview-shell h1,
 .preview-shell h2,
 .preview-shell h3 {
@@ -449,6 +552,10 @@ select:hover {
   .output-actions {
     grid-template-columns: 1fr;
   }
+
+  .activity-row { grid-template-columns: 1fr 1fr; }
+  .activity-row label:first-child { grid-column: 1 / -1; }
+  .metric-strip { grid-template-columns: 1fr 1fr; }
 }
 
   </style>
@@ -546,6 +653,17 @@ select:hover {
           <span>FACTA/CRS Check</span>
           <textarea id="factaCrsCheck" rows="3" placeholder="Add FACTA/CRS check details to append at the end of the rationale."></textarea>
         </label>
+
+        <section class="performance-builder" aria-labelledby="performanceBuilderTitle">
+          <div class="section-heading">
+            <div>
+              <h2 id="performanceBuilderTitle">Work Summary</h2>
+              <p>Add time spent and completed cases to calculate output, efficiency and AHT.</p>
+            </div>
+            <button id="addActivityBtn" class="text-button" type="button">+ Add queue</button>
+          </div>
+          <div id="activityList" class="activity-list"></div>
+        </section>
       </section>
     </main>
 
@@ -555,6 +673,8 @@ select:hover {
         <p>Ready to copy into your workflow. Markdown formatting is rendered below.</p>
       </div>
       <textarea id="output" class="hidden" aria-hidden="true" tabindex="-1"></textarea>
+      <div id="performancePreview"></div>
+      <div class="output-section-label">Rationale</div>
       <div id="outputPreview" class="preview-shell" aria-live="polite"></div>
       <div class="output-actions">
         <button id="generateBtn" class="primary">Generate Output</button>
@@ -780,6 +900,18 @@ const panelColor = document.getElementById('panelColor');
 const textboxColor = document.getElementById('textboxColor');
 const textColor = document.getElementById('textColor');
 const outputPreview = document.getElementById('outputPreview');
+const performancePreview = document.getElementById('performancePreview');
+const activityList = document.getElementById('activityList');
+const addActivityBtn = document.getElementById('addActivityBtn');
+
+const queueColors = ['#8b5cf6', '#22c55e', '#eab308', '#f97316', '#06b6d4', '#ec4899'];
+const defaultActivities = [
+  { queue: 'BCA Startup', duration: '02:00', multiplier: 3.4, actual: 7 },
+  { queue: 'BCA Established', duration: '01:45', multiplier: 3.4, actual: 6 },
+  { queue: 'BCA Sole Trader', duration: '01:30', multiplier: 3.4, actual: 6 },
+  { queue: 'BCA Sole Trader Resubs', duration: '02:00', multiplier: 3.9, actual: 8 }
+];
+let activities = defaultActivities.map(item => ({ ...item }));
 
 function syncGenerateButtonVisibility() {
   generateBtn.classList.toggle('hidden', autoGenerate.checked);
@@ -962,8 +1094,103 @@ function buildOutput() {
 
   output.value = sections.join('\n\n');
   renderOutputPreview(output.value);
+  renderPerformancePreview();
   saveState();
   return output.value;
+}
+
+function durationToMinutes(value) {
+  const parts = String(value || '').trim().split(':').map(Number);
+  if (parts.length !== 2 || parts.some(Number.isNaN)) return 0;
+  return Math.max(0, parts[0] * 60 + parts[1]);
+}
+
+function formatDuration(totalMinutes, includeSeconds = false) {
+  const safeMinutes = Math.max(0, Number(totalMinutes) || 0);
+  const hours = Math.floor(safeMinutes / 60);
+  const minutes = Math.floor(safeMinutes % 60);
+  const seconds = Math.round((safeMinutes % 1) * 60);
+  return includeSeconds
+    ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+    : `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+function getPerformanceData() {
+  const rows = activities.map((activity, index) => {
+    const minutes = durationToMinutes(activity.duration);
+    const multiplier = Math.max(0, Number(activity.multiplier) || 0);
+    const actual = Math.max(0, Number(activity.actual) || 0);
+    const expected = minutes / 60 * multiplier;
+    return {
+      ...activity, index, minutes, multiplier, actual, expected,
+      efficiency: expected ? actual / expected * 100 : 0,
+      aht: actual ? minutes / actual : 0
+    };
+  });
+  const totals = rows.reduce((sum, row) => ({
+    minutes: sum.minutes + row.minutes,
+    expected: sum.expected + row.expected,
+    actual: sum.actual + row.actual
+  }), { minutes: 0, expected: 0, actual: 0 });
+  totals.efficiency = totals.expected ? totals.actual / totals.expected * 100 : 0;
+  totals.aht = totals.actual ? totals.minutes / totals.actual : 0;
+  return { rows, totals };
+}
+
+function renderActivities() {
+  activityList.innerHTML = '';
+  activities.forEach((activity, index) => {
+    const row = document.createElement('div');
+    row.className = 'activity-row';
+    row.innerHTML = `
+      <label><span>Queue</span><input type="text" data-field="queue" value="${escapeHtml(activity.queue)}" aria-label="Queue name"></label>
+      <label><span>Duration</span><input type="time" data-field="duration" value="${escapeHtml(activity.duration)}" aria-label="Duration"></label>
+      <label><span>Multiplier</span><input type="number" data-field="multiplier" min="0" step="0.1" value="${activity.multiplier}" aria-label="Multiplier"></label>
+      <label><span>Actual</span><input type="number" data-field="actual" min="0" step="1" value="${activity.actual}" aria-label="Actual completed"></label>
+      <button class="remove-activity" type="button" title="Remove queue" aria-label="Remove ${escapeHtml(activity.queue)}">×</button>`;
+    row.querySelectorAll('input').forEach(input => input.addEventListener('input', () => {
+      activities[index][input.dataset.field] = input.dataset.field === 'queue' || input.dataset.field === 'duration'
+        ? input.value
+        : Number(input.value);
+      renderPerformancePreview();
+      saveState();
+    }));
+    row.querySelector('.remove-activity').addEventListener('click', () => {
+      activities.splice(index, 1);
+      renderActivities();
+      renderPerformancePreview();
+      saveState();
+    });
+    activityList.appendChild(row);
+  });
+}
+
+function renderPerformancePreview() {
+  const { rows, totals } = getPerformanceData();
+  if (!rows.length) {
+    performancePreview.innerHTML = '<div class="performance-card empty-performance">Add a queue to build your work summary.</div>';
+    return;
+  }
+  const validRows = rows.filter(row => row.queue.trim() || row.minutes || row.actual);
+  const tableRows = validRows.map(row => `
+    <tr>
+      <td><span class="queue-name"><i class="queue-dot" style="background:${queueColors[row.index % queueColors.length]}"></i>${escapeHtml(row.queue || 'Untitled queue')}</span></td>
+      <td>${formatDuration(row.minutes)}</td><td>${row.multiplier.toFixed(1)}</td><td>${row.expected.toFixed(2)}</td><td>${row.actual}</td>
+      <td class="${row.efficiency >= 100 ? 'efficiency-good' : 'efficiency-low'}">${row.expected ? `${row.efficiency.toFixed(1)}%` : '—'}</td>
+      <td>${row.actual ? formatDuration(row.aht, true) : '—'}</td>
+    </tr>`).join('');
+  performancePreview.innerHTML = `
+    <section class="performance-card" aria-label="Work summary performance">
+      <div class="performance-card-header"><div><h3>Work summary</h3><p>Live performance across ${validRows.length} ${validRows.length === 1 ? 'queue' : 'queues'}</p></div><span class="performance-badge ${totals.efficiency < 100 ? 'below' : ''}">${totals.efficiency >= 100 ? 'On target' : 'Below target'}</span></div>
+      <div class="metric-strip">
+        <div class="metric"><span>Productive time</span><strong>${formatDuration(totals.minutes)}</strong></div>
+        <div class="metric"><span>Expected</span><strong>${totals.expected.toFixed(2)}</strong></div>
+        <div class="metric"><span>Actual</span><strong>${totals.actual}</strong></div>
+        <div class="metric"><span>Efficiency</span><strong class="${totals.efficiency >= 100 ? 'efficiency-good' : 'efficiency-low'}">${totals.expected ? `${totals.efficiency.toFixed(1)}%` : '—'}</strong></div>
+        <div class="metric"><span>Avg. handle time</span><strong>${totals.actual ? formatDuration(totals.aht, true) : '—'}</strong></div>
+      </div>
+      <div class="performance-table-wrap"><table class="performance-table"><thead><tr><th>Queue</th><th>Duration</th><th>Multi.</th><th>Expected</th><th>Actual</th><th>Efficiency</th><th>AHT</th></tr></thead><tbody>${tableRows}</tbody><tfoot><tr><td>Total</td><td>${formatDuration(totals.minutes)}</td><td>—</td><td>${totals.expected.toFixed(2)}</td><td>${totals.actual}</td><td class="${totals.efficiency >= 100 ? 'efficiency-good' : 'efficiency-low'}">${totals.expected ? `${totals.efficiency.toFixed(1)}%` : '—'}</td><td>${totals.actual ? formatDuration(totals.aht, true) : '—'}</td></tr></tfoot></table></div>
+    </section>`;
 }
 
 function formatInlineMarkdown(line) {
@@ -1049,6 +1276,7 @@ function saveState() {
   state.macroOptions = macroOptions;
   state.theme = { mode: activeThemeMode, custom: customTheme };
   state.clearFormTextDefaults = clearFormTextDefaults;
+  state.activities = activities;
   state.output = output.value;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
@@ -1088,12 +1316,17 @@ function restoreState() {
       };
     }
 
+    if (Array.isArray(state.activities)) {
+      activities = state.activities.map(item => ({ ...item }));
+    }
+
     applyTheme(state.theme?.mode || 'light');
 
     const savedRiskFactors = Array.isArray(state.riskFactors) ? state.riskFactors : null;
     renderRiskFactors(savedRiskFactors);
     renderCifasOptions(state.cifasCheck || '');
     renderMacros();
+    renderActivities();
 
     output.value = state.output || '';
     renderOutputPreview(output.value);
@@ -1430,6 +1663,14 @@ addMacroBtn.addEventListener('click', () => {
   else saveState();
 });
 
+addActivityBtn.addEventListener('click', () => {
+  activities.push({ queue: '', duration: '01:00', multiplier: 3.4, actual: 0 });
+  renderActivities();
+  renderPerformancePreview();
+  activityList.lastElementChild?.querySelector('input')?.focus();
+  saveState();
+});
+
 newRiskFactor.addEventListener('keydown', event => {
   if (event.key === 'Enter') {
     event.preventDefault();
@@ -1528,11 +1769,13 @@ hardResetBtn.addEventListener('click', () => {
   riskFactorOptions = [...defaultRiskFactors];
   cifasOptions = [...defaultCifasOptions];
   macroOptions = [...defaultMacros];
+  activities = defaultActivities.map(item => ({ ...item }));
   clearFormTextDefaults = { ...defaultClearFormText };
 
   renderRiskFactors();
   renderCifasOptions();
   renderMacros();
+  renderActivities();
 
   [...document.querySelectorAll('input, textarea, select')].forEach(el => {
     if (el.type === 'checkbox') el.checked = false;
@@ -1559,6 +1802,7 @@ hardResetBtn.addEventListener('click', () => {
 
   output.value = '';
   renderOutputPreview('');
+  renderPerformancePreview();
   saveState();
 });
 
@@ -1570,10 +1814,12 @@ riskFactorsContainer.addEventListener('change', () => {
 renderRiskFactors();
 renderCifasOptions();
 renderMacros();
+renderActivities();
 applyTheme('light');
 restoreState();
 syncGenerateButtonVisibility();
 renderOutputPreview(output.value);
+renderPerformancePreview();
 if (autoGenerate.checked) buildOutput();
 
   </script>
