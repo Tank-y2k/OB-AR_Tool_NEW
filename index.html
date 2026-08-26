@@ -236,6 +236,33 @@ input:focus, select:focus, textarea:focus, button:focus {
   gap: 10px;
 }
 
+.cifas-checks {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.cifas-check-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 10px;
+  align-items: end;
+}
+
+.cifas-check-row label { margin: 0; }
+
+.cifas-check-action {
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.cifas-check-action.remove {
+  border-color: rgba(255, 125, 125, 0.35);
+  background: rgba(255, 125, 125, 0.14);
+}
+
 .risk-factor-item {
   display: flex;
   justify-content: space-between;
@@ -532,15 +559,7 @@ select:hover {
           <textarea id="rationaleNotes" rows="3" placeholder="Include any relevant communication links"></textarea>
         </label>
 
-        <label>
-          <span>CIFAS Check</span>
-          <select id="cifasCheck">
-            <option value="">Select an option</option>
-            <option value="Check completed - No results">Check completed - No results</option>
-            <option value="No check required - PCA onboarded within 14 days">No check required - PCA onboarded within 14 days</option>
-            <option value="N/A">N/A</option>
-          </select>
-        </label>
+        <div id="cifasChecks" class="cifas-checks"></div>
 
         <label>
           <span>FACTA/CRS Check</span>
@@ -766,7 +785,7 @@ const newRiskFactor = document.getElementById('newRiskFactor');
 const addRiskFactorBtn = document.getElementById('addRiskFactorBtn');
 const riskFactorManager = document.getElementById('riskFactorManager');
 const riskFactorsContainer = document.getElementById('riskFactors');
-const cifasCheck = document.getElementById('cifasCheck');
+const cifasChecksContainer = document.getElementById('cifasChecks');
 const newCifasOption = document.getElementById('newCifasOption');
 const addCifasOptionBtn = document.getElementById('addCifasOptionBtn');
 const cifasOptionManager = document.getElementById('cifasOptionManager');
@@ -787,6 +806,7 @@ function syncGenerateButtonVisibility() {
 
 let riskFactorOptions = [...defaultRiskFactors];
 let cifasOptions = [...defaultCifasOptions];
+let cifasChecks = [''];
 let macroOptions = [...defaultMacros];
 let lastFocusedTextField = null;
 let isMacroToolbarOpen = false;
@@ -806,7 +826,7 @@ const defaultClearFormText = {
   evidence: '',
   actionTaken: '',
   rationaleNotes: '',
-  cifasCheck: '',
+  cifasChecks: [''],
   factaCrsCheck: '',
   enabledRiskFactors: [...defaultRiskFactors]
 };
@@ -814,7 +834,7 @@ const defaultClearFormText = {
 let clearFormTextDefaults = { ...defaultClearFormText };
 
 const formIds = [
-  'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes', 'cifasCheck', 'factaCrsCheck',
+  'decision', 'riskLevel', 'summary', 'evidence', 'actionTaken', 'rationaleNotes', 'factaCrsCheck',
   'includeEmptySections', 'useMarkdownHeadings', 'autoGenerate',
   'themeMode', 'accentColor', 'bgColor', 'panelColor', 'textboxColor', 'textColor'
 ];
@@ -950,7 +970,7 @@ function buildOutput() {
 
   const additionalLines = [
     document.getElementById('rationaleNotes').value && `**Links:** ${document.getElementById('rationaleNotes').value}`,
-    document.getElementById('cifasCheck').value && `**CIFAS Check:** ${document.getElementById('cifasCheck').value}`,
+    ...cifasChecks.filter(Boolean).map(value => `**CIFAS Check:** ${value}`),
     document.getElementById('factaCrsCheck').value && `**FACTA/CRS Check:** ${document.getElementById('factaCrsCheck').value}`,
   ];
 
@@ -1046,6 +1066,7 @@ function saveState() {
   state.riskFactors = getCheckedValues('riskFactors');
   state.riskFactorOptions = riskFactorOptions;
   state.cifasOptions = cifasOptions;
+  state.cifasChecks = cifasChecks;
   state.macroOptions = macroOptions;
   state.theme = { mode: activeThemeMode, custom: customTheme };
   state.clearFormTextDefaults = clearFormTextDefaults;
@@ -1086,13 +1107,19 @@ function restoreState() {
         ...defaultClearFormText,
         ...state.clearFormTextDefaults
       };
+      if (!Array.isArray(state.clearFormTextDefaults.cifasChecks) && state.clearFormTextDefaults.cifasCheck) {
+        clearFormTextDefaults.cifasChecks = [state.clearFormTextDefaults.cifasCheck];
+      }
     }
 
     applyTheme(state.theme?.mode || 'light');
 
     const savedRiskFactors = Array.isArray(state.riskFactors) ? state.riskFactors : null;
     renderRiskFactors(savedRiskFactors);
-    renderCifasOptions(state.cifasCheck || '');
+    cifasChecks = Array.isArray(state.cifasChecks) && state.cifasChecks.length
+      ? [...state.cifasChecks]
+      : [state.cifasCheck || ''];
+    renderCifasChecks();
     renderMacros();
 
     output.value = state.output || '';
@@ -1174,17 +1201,54 @@ function renderRiskFactors(checkedValues = null) {
   });
 }
 
-function renderCifasOptions(selectedValue = '') {
-  const activeValue = selectedValue || cifasCheck.value;
-  cifasCheck.innerHTML = '<option value="">Select an option</option>';
+function renderCifasChecks() {
+  cifasChecksContainer.innerHTML = '';
+
+  cifasChecks.forEach((value, index) => {
+    const row = document.createElement('div');
+    row.className = 'cifas-check-row';
+
+    const label = document.createElement('label');
+    const title = document.createElement('span');
+    title.textContent = index === 0 ? 'CIFAS Check' : `Additional CIFAS Check ${index}`;
+    label.appendChild(title);
+
+    const select = document.createElement('select');
+    select.className = 'cifas-check-select';
+    select.setAttribute('aria-label', title.textContent);
+    select.innerHTML = '<option value="">Select an option</option>';
+    cifasOptions.forEach(option => select.add(new Option(option, option)));
+    select.value = cifasOptions.includes(value) ? value : '';
+    select.addEventListener('change', () => {
+      cifasChecks[index] = select.value;
+      if (autoGenerate.checked) buildOutput();
+      else saveState();
+    });
+    label.appendChild(select);
+    row.appendChild(label);
+
+    const action = document.createElement('button');
+    action.type = 'button';
+    action.className = `icon-btn cifas-check-action${index ? ' remove' : ''}`;
+    action.textContent = index ? '−' : '+';
+    action.title = index ? 'Remove this CIFAS check' : 'Add another CIFAS check';
+    action.setAttribute('aria-label', action.title);
+    action.addEventListener('click', () => {
+      if (index === 0) cifasChecks.push('');
+      else cifasChecks.splice(index, 1);
+      renderCifasChecks();
+      if (autoGenerate.checked) buildOutput();
+      else saveState();
+    });
+    row.appendChild(action);
+    cifasChecksContainer.appendChild(row);
+  });
+}
+
+function renderCifasOptions() {
   cifasOptionManager.innerHTML = '';
 
   cifasOptions.forEach(option => {
-    const selectOption = document.createElement('option');
-    selectOption.value = option;
-    selectOption.textContent = option;
-    cifasCheck.appendChild(selectOption);
-
     const managerItem = document.createElement('div');
     managerItem.className = 'risk-factor-item';
 
@@ -1211,10 +1275,9 @@ function renderCifasOptions(selectedValue = '') {
         optionInput.value = option;
         return;
       }
-      const currentValue = cifasCheck.value;
       cifasOptions = cifasOptions.map(item => (item === option ? nextValue : item));
-      const resolvedValue = currentValue === option ? nextValue : currentValue;
-      renderCifasOptions(resolvedValue);
+      cifasChecks = cifasChecks.map(value => (value === option ? nextValue : value));
+      renderCifasOptions();
       if (autoGenerate.checked) buildOutput();
       else saveState();
     });
@@ -1225,10 +1288,9 @@ function renderCifasOptions(selectedValue = '') {
     removeBtn.textContent = 'Remove';
     removeBtn.classList.add('btn-danger');
     removeBtn.addEventListener('click', () => {
-      const currentValue = cifasCheck.value;
       cifasOptions = cifasOptions.filter(item => item !== option);
-      const nextSelected = currentValue === option ? '' : currentValue;
-      renderCifasOptions(nextSelected);
+      cifasChecks = cifasChecks.map(value => (value === option ? '' : value));
+      renderCifasOptions();
       if (autoGenerate.checked) buildOutput();
       else saveState();
     });
@@ -1238,7 +1300,7 @@ function renderCifasOptions(selectedValue = '') {
     cifasOptionManager.appendChild(managerItem);
   });
 
-  cifasCheck.value = cifasOptions.includes(activeValue) ? activeValue : '';
+  renderCifasChecks();
 }
 
 function renderMacros() {
@@ -1489,7 +1551,10 @@ clearBtn.addEventListener('click', () => {
   document.getElementById('evidence').value = clearFormTextDefaults.evidence;
   document.getElementById('actionTaken').value = clearFormTextDefaults.actionTaken;
   document.getElementById('rationaleNotes').value = clearFormTextDefaults.rationaleNotes;
-  document.getElementById('cifasCheck').value = clearFormTextDefaults.cifasCheck;
+  cifasChecks = Array.isArray(clearFormTextDefaults.cifasChecks) && clearFormTextDefaults.cifasChecks.length
+    ? [...clearFormTextDefaults.cifasChecks]
+    : [''];
+  renderCifasChecks();
   document.getElementById('factaCrsCheck').value = clearFormTextDefaults.factaCrsCheck;
   const enabledRiskFactors = new Set(clearFormTextDefaults.enabledRiskFactors || []);
   [...document.querySelectorAll('#riskFactors input[type="checkbox"]')].forEach(cb => {
@@ -1510,7 +1575,7 @@ editDefaultsBtn.addEventListener('click', () => {
     evidence: document.getElementById('evidence').value,
     actionTaken: document.getElementById('actionTaken').value,
     rationaleNotes: document.getElementById('rationaleNotes').value,
-    cifasCheck: document.getElementById('cifasCheck').value,
+    cifasChecks: [...cifasChecks],
     factaCrsCheck: document.getElementById('factaCrsCheck').value,
     enabledRiskFactors: getCheckedValues('riskFactors')
   };
@@ -1528,6 +1593,7 @@ hardResetBtn.addEventListener('click', () => {
   riskFactorOptions = [...defaultRiskFactors];
   cifasOptions = [...defaultCifasOptions];
   macroOptions = [...defaultMacros];
+  cifasChecks = [''];
   clearFormTextDefaults = { ...defaultClearFormText };
 
   renderRiskFactors();
