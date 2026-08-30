@@ -1545,6 +1545,7 @@ copyBtn.addEventListener('click', async () => {
 clearBtn.addEventListener('click', () => {
   if (!confirm('Clear all fields and reset the preview?')) return;
 
+  setMacroToolbarOpen(false);
   document.getElementById('decision').value = clearFormTextDefaults.decision;
   document.getElementById('riskLevel').value = clearFormTextDefaults.riskLevel;
   document.getElementById('summary').value = clearFormTextDefaults.summary;
@@ -1589,6 +1590,7 @@ editDefaultsBtn.addEventListener('click', () => {
 hardResetBtn.addEventListener('click', () => {
   if (!confirm('Hard reset all customisations and defaults back to original values?')) return;
 
+  setMacroToolbarOpen(false);
   localStorage.removeItem(STORAGE_KEY);
   riskFactorOptions = [...defaultRiskFactors];
   cifasOptions = [...defaultCifasOptions];
